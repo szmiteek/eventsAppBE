@@ -1,6 +1,6 @@
 package com.eventsApp.eventWork;
 
-import com.eventsApp.employee.Employee;
+import com.eventsApp.employee.model.Employee;
 import com.eventsApp.event.Event;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -28,6 +28,6 @@ public class EventWork {
     @ManyToOne
     private Employee employee;
 
-    private Integer hoursWorked;
+    private double hoursWorked;
 
 }

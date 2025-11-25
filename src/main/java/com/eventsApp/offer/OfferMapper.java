@@ -8,7 +8,7 @@ public class OfferMapper {
         Offer offer = new Offer();
         offer.setPersonalData(dto.getPersonalData());
         offer.setVenue(dto.getVenue());
-        offer.setDate(dto.getDate());
+        offer.setEventDate(dto.getEventDate());
         offer.setEmail(dto.getEmail());
         offer.setPhone(dto.getPhone());
         offer.setBudget(dto.getBudget());

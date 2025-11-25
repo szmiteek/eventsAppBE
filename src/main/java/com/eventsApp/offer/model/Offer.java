@@ -22,10 +22,10 @@ public class Offer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    private LocalDate createDate;
+    private LocalDate createdDate;
     private String personalData;
     private String venue;
-    private LocalDate date;
+    private LocalDate eventDate;
     private String email;
     private String phone;
     private Integer budget;

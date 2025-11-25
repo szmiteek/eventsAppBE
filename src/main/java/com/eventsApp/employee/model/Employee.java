@@ -1,8 +1,6 @@
-package com.eventsApp.employee;
+package com.eventsApp.employee.model;
 
-import com.eventsApp.event.Event;
 import com.eventsApp.eventWork.EventWork;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -11,7 +9,7 @@ import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.math.BigDecimal;
+
 import java.util.Set;
 
 @Entity
@@ -23,7 +21,7 @@ public class Employee {
     private int id;
     private String firstName;
     private String lastName;
-    private BigDecimal hourlyRate;
+    private double hourlyRate;
 
     @OneToMany(mappedBy = "employee")
     private Set<EventWork> events;

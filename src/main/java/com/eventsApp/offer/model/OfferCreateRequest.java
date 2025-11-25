@@ -10,7 +10,7 @@ import java.time.LocalDate;
 public class OfferCreateRequest {
     private String personalData;
     private String venue;
-    private LocalDate date;
+    private LocalDate eventDate;
     private String email;
     private String phone;
     private Integer budget;

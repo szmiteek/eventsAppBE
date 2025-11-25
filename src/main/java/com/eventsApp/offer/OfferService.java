@@ -21,7 +21,7 @@ public class OfferService {
 
     public void createOffer(OfferCreateRequest offerRequest) {
         Offer offer = OfferMapper.toEntity(offerRequest);
-        offer.setCreateDate(LocalDate.now());
+        offer.setCreatedDate(LocalDate.now());
         offer.setStatus(OfferStatus.NOT_SENT);
         offerRepository.save(offer);
     }

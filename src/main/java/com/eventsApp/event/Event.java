@@ -1,9 +1,7 @@
 package com.eventsApp.event;
 
-import com.eventsApp.employee.Employee;
 import com.eventsApp.eventWork.EventWork;
 import com.eventsApp.offer.model.Offer;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
