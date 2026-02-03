@@ -1,42 +1,32 @@
-package com.eventsApp.offer.model;
+package com.eventsApp.offer.model.dto;
 
 import com.eventsApp.offer.OfferStatus;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Entity
 @Builder
-public class Offer {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class OfferDTO {
     private int id;
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate createdDate;
+
     private String personalData;
     private String venue;
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate eventDate;
+
     private String email;
     private String phone;
     private Integer budget;
     private Integer guests;
-
     private BigDecimal price;
     private String comment;
-
-    @Enumerated(EnumType.STRING)
     private OfferStatus status;
-
 }

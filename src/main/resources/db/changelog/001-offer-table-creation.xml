@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="0" author="adrian">
+
+        <createTable tableName="offer">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"></constraints>
+            </column>
+            <column name="created_date" type="date"></column>
+            <column name="personal_data" type="varchar(50)"></column>
+            <column name="venue" type="varchar(50)"></column>
+            <column name="event_date" type="date"></column>
+            <column name="email" type="varchar(50)"></column>
+            <column name="phone" type="varchar(50)"></column>
+            <column name="budget" type="int"></column>
+            <column name="guests" type="int"></column>
+            <column name="price" type="DECIMAL(10,2)"></column>
+            <column name="comment" type="TEXT"></column>
+            <column name="status" type="varchar(50)"></column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

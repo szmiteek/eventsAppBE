@@ -1,6 +1,6 @@
-package com.eventsApp.event;
+package com.eventsApp.event.model;
 
-import com.eventsApp.eventWork.EventWork;
+import com.eventsApp.eventWork.model.EventWork;
 import com.eventsApp.offer.model.Offer;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

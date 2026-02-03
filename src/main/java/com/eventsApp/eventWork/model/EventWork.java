@@ -1,7 +1,7 @@
-package com.eventsApp.eventWork;
+package com.eventsApp.eventWork.model;
 
 import com.eventsApp.employee.model.Employee;
-import com.eventsApp.event.Event;
+import com.eventsApp.event.model.Event;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
