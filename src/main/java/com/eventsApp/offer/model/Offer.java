@@ -1,21 +1,28 @@
 package com.eventsApp.offer.model;
 
+import com.eventsApp.eventElement.model.EventElement;
 import com.eventsApp.offer.OfferStatus;
+import com.eventsApp.offerImage.model.OfferImage;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.OneToMany;
+import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -23,7 +30,8 @@ import java.time.LocalDate;
 public class Offer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
+    private Integer tenantId;
     private LocalDate createdDate;
     private String personalData;
     private String venue;
@@ -38,5 +46,32 @@ public class Offer {
 
     @Enumerated(EnumType.STRING)
     private OfferStatus status;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "json")
+    private List<String> eventType;
+
+    private String mainTableType;
+    private String mainTableSeats;
+    private String guestsTableType;
+    private boolean appetizersOnTable;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "json")
+    private List<String> decorationType;
+
+    private String flowersType;
+    private String colors;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @OneToMany(mappedBy = "offer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<OfferImage> images = new ArrayList<>();
+
+    @OneToMany(mappedBy = "offer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<EventElement> eventElements = new ArrayList<>();
 
 }

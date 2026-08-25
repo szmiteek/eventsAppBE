@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class OfferUpdateCommand {
@@ -22,4 +23,14 @@ public class OfferUpdateCommand {
     private Integer guests;
     private String comment;
     private BigDecimal price;
+
+    private List<String> eventType;
+    private String mainTableType;
+    private String mainTableSeats;
+    private String guestsTableType;
+    private Boolean appetizersOnTable;
+    private List<String> decorationType;
+    private String flowersType;
+    private String colors;
+    private String description;
 }

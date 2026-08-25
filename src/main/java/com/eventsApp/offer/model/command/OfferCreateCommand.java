@@ -3,9 +3,11 @@ package com.eventsApp.offer.model.command;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class OfferCreateCommand {
@@ -25,10 +27,20 @@ public class OfferCreateCommand {
     @NotBlank(message = "EMPTY_VALUE")
     private String phone;
 
-    @NotBlank(message = "EMPTY_VALUE")
+    @NotNull
     private Integer budget;
 
-    @NotBlank(message = "EMPTY_VALUE")
+    @NotNull
     private Integer guests;
+
+    private List<String> eventType;
+    private String mainTableType;
+    private String mainTableSeats;
+    private String guestsTableType;
+    private boolean appetizersOnTable;
+    private List<String> decorationType;
+    private String flowersType;
+    private String colors;
+    private String description;
 
 }
