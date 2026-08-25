@@ -19,6 +19,7 @@ public class EmployeeMapper {
 
     public static EmployeeDTO mapToDTO(Employee employee) {
         return EmployeeDTO.builder()
+                .id(employee.getId())
                 .firstName(employee.getFirstName())
                 .lastName(employee.getLastName())
                 .hourlyRate(employee.getHourlyRate())

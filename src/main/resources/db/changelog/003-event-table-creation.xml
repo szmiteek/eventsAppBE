@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="0" author="adrian">
+        <createTable tableName="event">
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="client_personal_data" type="VARCHAR(255)"/>
+            <column name="venue" type="VARCHAR(255)"/>
+            <column name="date" type="DATE"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="phone" type="VARCHAR(50)"/>
+            <column name="budget" type="INT"/>
+            <column name="guests" type="INT"/>
+            <column name="price" type="DECIMAL(19,2)"/>
+            <column name="comment" type="VARCHAR(1000)"/>
+            <column name="offer_id" type="INT"/>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

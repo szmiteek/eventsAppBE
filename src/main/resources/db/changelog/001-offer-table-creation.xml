@@ -5,7 +5,6 @@
                    https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <changeSet id="0" author="adrian">
-
         <createTable tableName="offer">
             <column name="id" type="int" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"></constraints>

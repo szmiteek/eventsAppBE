@@ -3,6 +3,7 @@ package com.eventsApp.employee;
 import com.eventsApp.employee.model.dto.EmployeeDTO;
 import com.eventsApp.employee.model.command.EmployeeCreateCommand;
 import com.eventsApp.employee.model.command.EmployeeUpdateCommand;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("employees")
+@RequestMapping("event-api/employee")
 @RequiredArgsConstructor
 public class EmployeeController {
 
@@ -31,7 +32,7 @@ public class EmployeeController {
     }
 
     @PostMapping()
-    public ResponseEntity<EmployeeDTO> create(@RequestBody EmployeeCreateCommand command) {
+    public ResponseEntity<EmployeeDTO> create(@Valid @RequestBody EmployeeCreateCommand command) {
         return new ResponseEntity(employeeService.create(command), HttpStatus.CREATED);
 
     }
@@ -43,7 +44,7 @@ public class EmployeeController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> update(@PathVariable int id, @RequestBody EmployeeUpdateCommand command) {
+    public ResponseEntity<Void> update(@PathVariable int id, @Valid @RequestBody EmployeeUpdateCommand command) {
         return new ResponseEntity(employeeService.update(id, command), HttpStatus.OK);
 
     }

@@ -4,4 +4,13 @@
                    https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <include file="changelog/001-offer-table-creation.xml" relativeToChangelogFile="true"/>
+    <include file="changelog/002-employee-table-creation.xml" relativeToChangelogFile="true"/>
+    <include file="changelog/003-event-table-creation.xml" relativeToChangelogFile="true"/>
+    <include file="changelog/004-eventWork-table-creation.xml" relativeToChangelogFile="true"/>
+    <include file="changelog/005-offer-image-table-creation.xml" relativeToChangelogFile="true"/>
+    <include file="changelog/006-offer-additional-fields.xml" relativeToChangelogFile="true"/>
+    <include file="changelog/007-event-element-table-creation.xml" relativeToChangelogFile="true"/>
+    <include file="changelog/008-tenant-and-scoping.xml" relativeToChangelogFile="true"/>
+    <include file="changelog/009-update-seed-tenant-emails.xml" relativeToChangelogFile="true"/>
+    <include file="changelog/010-tenant-public-form-token.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

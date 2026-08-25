@@ -1,6 +1,7 @@
 package com.eventsApp.employee.model;
 
 import com.eventsApp.eventWork.model.EventWork;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,9 +10,7 @@ import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 
 import java.util.Set;
@@ -25,10 +24,12 @@ public class Employee {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+    private Integer tenantId;
     private String firstName;
     private String lastName;
     private double hourlyRate;
 
-    @OneToMany(mappedBy = "employee")
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
     private Set<EventWork> events;
+
 }
