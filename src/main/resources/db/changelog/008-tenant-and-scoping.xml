@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="0" author="adrian">
+        <createTable tableName="tenant">
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="company_name" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password_hash" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="DATE"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1" author="adrian">
+        <addColumn tableName="offer">
+            <column name="tenant_id" type="INT"/>
+        </addColumn>
+        <addColumn tableName="event">
+            <column name="tenant_id" type="INT"/>
+        </addColumn>
+        <addColumn tableName="employee">
+            <column name="tenant_id" type="INT"/>
+        </addColumn>
+    </changeSet>
+
+    <!-- Default passwords: admin123 (super admin) / tenant123 (default tenant) — change after first login. -->
+    <changeSet id="2" author="adrian">
+        <insert tableName="tenant">
+            <column name="company_name" value="Super Admin"/>
+            <column name="email" value="admin@app.local"/>
+            <column name="password_hash" value="$2b$10$P8gMWR0bm3bL9KXYKPJ4RuHdRVs.ceM8PJhkZUaGCsxdL9h61OEXW"/>
+            <column name="role" value="SUPER_ADMIN"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="created_date" valueDate="CURRENT_DATE"/>
+        </insert>
+        <insert tableName="tenant">
+            <column name="company_name" value="Domyślny tenant"/>
+            <column name="email" value="default@tenant.local"/>
+            <column name="password_hash" value="$2b$10$7j95.qDZ5WVLWXOYrcQZlewRp72gK7csS/JiRdzUAM3jT4w.45bJu"/>
+            <column name="role" value="TENANT"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="created_date" valueDate="CURRENT_DATE"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="3" author="adrian">
+        <sql>
+            UPDATE offer SET tenant_id = (SELECT id FROM tenant WHERE role = 'TENANT' LIMIT 1) WHERE tenant_id IS NULL;
+            UPDATE event SET tenant_id = (SELECT id FROM tenant WHERE role = 'TENANT' LIMIT 1) WHERE tenant_id IS NULL;
+            UPDATE employee SET tenant_id = (SELECT id FROM tenant WHERE role = 'TENANT' LIMIT 1) WHERE tenant_id IS NULL;
+        </sql>
+    </changeSet>
+
+    <changeSet id="4" author="adrian">
+        <addNotNullConstraint tableName="offer" columnName="tenant_id" columnDataType="INT"/>
+        <addNotNullConstraint tableName="event" columnName="tenant_id" columnDataType="INT"/>
+        <addNotNullConstraint tableName="employee" columnName="tenant_id" columnDataType="INT"/>
+        <addForeignKeyConstraint baseTableName="offer" baseColumnNames="tenant_id"
+                                  constraintName="fk_offer_tenant" referencedTableName="tenant" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="event" baseColumnNames="tenant_id"
+                                  constraintName="fk_event_tenant" referencedTableName="tenant" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="employee" baseColumnNames="tenant_id"
+                                  constraintName="fk_employee_tenant" referencedTableName="tenant" referencedColumnNames="id"/>
+    </changeSet>
+</databaseChangeLog>

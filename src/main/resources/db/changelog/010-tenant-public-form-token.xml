@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="0" author="adrian">
+        <addColumn tableName="tenant">
+            <column name="public_form_token" type="VARCHAR(36)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="1" author="adrian">
+        <sql>
+            UPDATE tenant SET public_form_token = UUID() WHERE public_form_token IS NULL;
+        </sql>
+    </changeSet>
+
+    <changeSet id="2" author="adrian">
+        <addNotNullConstraint tableName="tenant" columnName="public_form_token" columnDataType="VARCHAR(36)"/>
+        <addUniqueConstraint tableName="tenant" columnNames="public_form_token" constraintName="uk_tenant_public_form_token"/>
+    </changeSet>
+</databaseChangeLog>
