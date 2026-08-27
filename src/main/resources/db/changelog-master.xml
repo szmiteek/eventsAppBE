@@ -13,4 +13,9 @@
     <include file="changelog/008-tenant-and-scoping.xml" relativeToChangelogFile="true"/>
     <include file="changelog/009-update-seed-tenant-emails.xml" relativeToChangelogFile="true"/>
     <include file="changelog/010-tenant-public-form-token.xml" relativeToChangelogFile="true"/>
+    <include file="changelog/011-offer-pdf-generated-date.xml" relativeToChangelogFile="true"/>
+    <include file="changelog/012-offer-status-not-ready-ready.xml" relativeToChangelogFile="true"/>
+    <include file="changelog/013-tenant-email-settings.xml" relativeToChangelogFile="true"/>
+    <include file="changelog/014-tenant-mail-connection.xml" relativeToChangelogFile="true"/>
+    <include file="changelog/015-offer-decoration-description.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

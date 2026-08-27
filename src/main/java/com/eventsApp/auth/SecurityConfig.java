@@ -34,6 +34,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/event-api/auth/login").permitAll()
                         .requestMatchers("/event-api/public/**").permitAll()
+                        .requestMatchers("/api/integrations/google/callback").permitAll()
+                        .requestMatchers("/api/integrations/**").hasRole("TENANT")
                         .requestMatchers("/event-api/tenants/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/event-api/auth/**").authenticated()
                         .requestMatchers("/event-api/**").hasRole("TENANT")

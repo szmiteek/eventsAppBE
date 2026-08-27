@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Generated offer PDFs ###
+/storage/
+
+### Local secrets (Google OAuth, encryption key) ###
+local.env

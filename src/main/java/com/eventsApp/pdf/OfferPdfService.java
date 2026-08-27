@@ -5,6 +5,7 @@ import com.eventsApp.eventElement.EventElementRepository;
 import com.eventsApp.eventElement.model.EventElement;
 import com.eventsApp.exceptions.EventApiException;
 import com.eventsApp.offer.OfferRepository;
+import com.eventsApp.offer.OfferStatus;
 import com.eventsApp.offer.model.Offer;
 import com.eventsApp.offerImage.OfferImageRepository;
 import com.eventsApp.offerImage.model.OfferImage;
@@ -31,9 +32,11 @@ import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -50,11 +53,13 @@ public class OfferPdfService {
     private final OfferImageRepository offerImageRepository;
     private final EventElementRepository eventElementRepository;
     private final CurrentTenantProvider currentTenantProvider;
+    private final OfferPdfStorageService offerPdfStorageService;
 
     public byte[] generateOfferPdf(int offerId, OfferPdfOverrides overrides) {
+        int tenantId = currentTenantProvider.requireTenantId();
         Offer offer = offerRepository.findById(offerId)
                 .orElseThrow(() -> new EventApiException("Offer not found", HttpStatus.NOT_FOUND));
-        if (!offer.getTenantId().equals(currentTenantProvider.requireTenantId())) {
+        if (!offer.getTenantId().equals(tenantId)) {
             throw new EventApiException("Offer not found", HttpStatus.NOT_FOUND);
         }
         List<OfferImage> images = offerImageRepository.findByOfferId(offerId);
@@ -66,6 +71,9 @@ public class OfferPdfService {
         String mainTable = overrides.mainTable() != null ? overrides.mainTable() : offer.getMainTableType();
         String guestsTable = overrides.guestsTable() != null ? overrides.guestsTable() : offer.getGuestsTableType();
         String flowers = overrides.flowers();
+        String decorationDescription = overrides.description() != null
+                ? overrides.description()
+                : offer.getDecorationDescription();
 
         try (InputStream templateStream = getClass().getResourceAsStream(TEMPLATE_PATH)) {
             if (templateStream == null) {
@@ -91,16 +99,37 @@ public class OfferPdfService {
                 try (PDPageContentStream cs = new PDPageContentStream(
                         document, pricingPage, PDPageContentStream.AppendMode.APPEND, true, true)) {
                     drawPricingTable(cs, font, eventElementRepository.findAllByOfferId(offerId));
-                    drawDescription(cs, font, overrides.description());
+                    drawDescription(cs, font, decorationDescription);
                 }
 
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 document.save(out);
-                return out.toByteArray();
+                byte[] pdf = out.toByteArray();
+
+                offerPdfStorageService.save(tenantId, offerId, pdf);
+                // The modal edits the offer's own description, so keep the two in sync (same as event elements).
+                offer.setDecorationDescription(decorationDescription);
+                offer.setPdfGeneratedDate(LocalDateTime.now());
+                if (offer.getStatus() == OfferStatus.NOT_READY) {
+                    offer.setStatus(OfferStatus.READY);
+                }
+                offerRepository.save(offer);
+
+                return pdf;
             }
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to generate offer PDF", e);
         }
+    }
+
+    public Optional<byte[]> loadSavedPdf(int offerId) {
+        int tenantId = currentTenantProvider.requireTenantId();
+        Offer offer = offerRepository.findById(offerId)
+                .orElseThrow(() -> new EventApiException("Offer not found", HttpStatus.NOT_FOUND));
+        if (!offer.getTenantId().equals(tenantId)) {
+            throw new EventApiException("Offer not found", HttpStatus.NOT_FOUND);
+        }
+        return offerPdfStorageService.load(tenantId, offerId);
     }
 
     private PDFont loadFont(PDDocument document) throws IOException {

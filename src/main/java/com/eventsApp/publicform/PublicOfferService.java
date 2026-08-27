@@ -66,7 +66,7 @@ public class PublicOfferService {
                 .mainTableSeats(command.getMainTableSeats())
                 .guestsTableType(command.getGuestsTableType())
                 .flowersType(command.getFlowersType())
-                .status(OfferStatus.NOT_SENT)
+                .status(OfferStatus.NOT_READY)
                 .createdDate(LocalDate.now())
                 .build();
         Offer saved = offerRepository.save(offer);

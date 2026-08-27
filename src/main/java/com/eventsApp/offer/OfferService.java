@@ -39,7 +39,7 @@ public class OfferService {
         Offer offer = fromCreateCommand(offerRequest);
         offer.setTenantId(currentTenantProvider.requireTenantId());
         offer.setCreatedDate(LocalDate.now());
-        offer.setStatus(OfferStatus.NOT_SENT);
+        offer.setStatus(OfferStatus.NOT_READY);
         return mapToDTO(offerRepository.save(offer));
     }
 

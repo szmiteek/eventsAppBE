@@ -1,4 +1,4 @@
-package com.eventsApp.auth.model;
+package com.eventsApp.integration.mail.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -7,46 +7,45 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "tenant_mail_connection")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Tenant {
+public class TenantMailConnection {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private String companyName;
-
-    @Column(unique = true, nullable = false)
-    private String email;
-
-    @Column(nullable = false)
-    private String passwordHash;
+    @Column(nullable = false, unique = true)
+    private Integer tenantId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TenantRole role;
+    private MailProvider provider;
 
     @Column(nullable = false)
-    private boolean active;
+    private String email;
 
-    private LocalDate createdDate;
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String encryptedRefreshToken;
 
-    @Column(unique = true)
-    private String publicFormToken;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MailConnectionStatus status;
 
-    @Column(columnDefinition = "TEXT")
-    private String emailMessage;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

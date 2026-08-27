@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="0" author="adrian">
+        <createTable tableName="tenant_mail_connection">
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="INT">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_tenant_mail_connection_tenant"/>
+            </column>
+            <column name="provider" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="encrypted_refresh_token" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="tenant_mail_connection" baseColumnNames="tenant_id"
+                                  constraintName="fk_tenant_mail_connection_tenant"
+                                  referencedTableName="tenant" referencedColumnNames="id"/>
+    </changeSet>
+
+    <!-- SMTP credentials are replaced by Google OAuth; the message template stays on the tenant. -->
+    <changeSet id="1" author="adrian">
+        <dropColumn tableName="tenant" columnName="smtp_host"/>
+        <dropColumn tableName="tenant" columnName="smtp_port"/>
+        <dropColumn tableName="tenant" columnName="smtp_username"/>
+        <dropColumn tableName="tenant" columnName="smtp_password"/>
+    </changeSet>
+</databaseChangeLog>

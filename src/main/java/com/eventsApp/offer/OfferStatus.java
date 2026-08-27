@@ -1,7 +1,8 @@
 package com.eventsApp.offer;
 
 public enum OfferStatus {
-    NOT_SENT,
+    NOT_READY,
+    READY,
     SENT,
     SIGNED
 }

@@ -1,6 +1,9 @@
 package com.eventsApp.offer;
 
 
+import com.eventsApp.email.OfferEmailService;
+import com.eventsApp.exceptions.EventApiException;
+import com.eventsApp.offer.model.command.OfferSendCommand;
 import com.eventsApp.offer.model.command.OfferUpdateCommand;
 import com.eventsApp.offer.model.command.OfferUpdateStatusCommand;
 import com.eventsApp.offer.model.dto.OfferDTO;
@@ -46,6 +49,7 @@ public class OfferController {
     private final OfferService offerService;
     private final OfferImageService offerImageService;
     private final OfferPdfService offerPdfService;
+    private final OfferEmailService offerEmailService;
 
     @GetMapping()
     public ResponseEntity<Page<OfferDTO>> getAll(@PageableDefault Pageable pageable, OfferFilter filters) {
@@ -74,6 +78,23 @@ public class OfferController {
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"oferta-" + id + ".pdf\"")
                 .body(pdf);
+    }
+
+    @GetMapping("/{id}/pdf/download")
+    public ResponseEntity<byte[]> downloadSavedPdf(@PathVariable int id) {
+        byte[] pdf = offerPdfService.loadSavedPdf(id)
+                .orElseThrow(() -> new EventApiException("PDF not generated yet for this offer", HttpStatus.NOT_FOUND));
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"oferta-" + id + ".pdf\"")
+                .body(pdf);
+    }
+
+    @PostMapping("/{id}/send")
+    public ResponseEntity<OfferDTO> sendEmail(@PathVariable int id,
+                                              @Valid @RequestBody(required = false) OfferSendCommand command) {
+        return ResponseEntity.ok(
+                offerEmailService.sendOfferEmail(id, command != null ? command.getEmail() : null));
     }
 
     @PostMapping()

@@ -52,6 +52,8 @@ public class OfferMapper {
                 .flowersType(offer.getFlowersType())
                 .colors(offer.getColors())
                 .description(offer.getDescription())
+                .decorationDescription(offer.getDecorationDescription())
+                .pdfGeneratedDate(offer.getPdfGeneratedDate())
                 .build();
     }
 
@@ -73,5 +75,6 @@ public class OfferMapper {
         Optional.ofNullable(command.getFlowersType()).ifPresent(offer::setFlowersType);
         Optional.ofNullable(command.getColors()).ifPresent(offer::setColors);
         Optional.ofNullable(command.getDescription()).ifPresent(offer::setDescription);
+        Optional.ofNullable(command.getDecorationDescription()).ifPresent(offer::setDecorationDescription);
     }
 }

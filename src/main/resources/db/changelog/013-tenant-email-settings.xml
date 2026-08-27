@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="0" author="adrian">
+        <addColumn tableName="tenant">
+            <column name="smtp_host" type="VARCHAR(255)"/>
+            <column name="smtp_port" type="INT"/>
+            <column name="smtp_username" type="VARCHAR(255)"/>
+            <column name="smtp_password" type="VARCHAR(255)"/>
+            <column name="email_message" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>
