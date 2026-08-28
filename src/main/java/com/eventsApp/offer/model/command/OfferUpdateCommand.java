@@ -33,4 +33,5 @@ public class OfferUpdateCommand {
     private String flowersType;
     private String colors;
     private String description;
+    private String decorationDescription;
 }
