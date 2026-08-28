@@ -1,0 +1,12 @@
+target/
+storage/
+local.env
+.git/
+.gitignore
+.idea/
+*.iml
+.DS_Store
+docker-compose.yml
+run-local.sh
+oferta.pdf
+HELP.md
