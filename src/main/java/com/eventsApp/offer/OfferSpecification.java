@@ -64,10 +64,11 @@ public class OfferSpecification {
     public static Specification<Offer> build(OfferFilter filters, Integer tenantId) {
         Specification<Offer> spec = filterByTenant(tenantId);
 
-        if (filters.getCreatedDateFrom() != null) {
+        // Either bound on its own is a valid filter — "to" alone must narrow the results too.
+        if (filters.getCreatedDateFrom() != null || filters.getCreatedDateTo() != null) {
             spec = spec.and(filterByCreatedDate(filters.getCreatedDateFrom(), filters.getCreatedDateTo()));
         }
-        if (filters.getEventDateFrom() != null) {
+        if (filters.getEventDateFrom() != null || filters.getEventDateTo() != null) {
             spec = spec.and(filterByEventDate(filters.getEventDateFrom(), filters.getEventDateTo()));
         }
         if (filters.getClient() != null) {

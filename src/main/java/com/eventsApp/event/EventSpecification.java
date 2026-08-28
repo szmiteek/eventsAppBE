@@ -49,7 +49,8 @@ public class EventSpecification {
     public static Specification<Event> build(EventFilter filters, Integer tenantId) {
         Specification<Event> spec = filterByTenant(tenantId);
 
-        if (filters.getDateFrom() != null) {
+        // Either bound on its own is a valid filter — "to" alone must narrow the results too.
+        if (filters.getDateFrom() != null || filters.getDateTo() != null) {
             spec = spec.and(filterByDate(filters.getDateFrom(), filters.getDateTo()));
         }
         if (filters.getClient() != null) {
