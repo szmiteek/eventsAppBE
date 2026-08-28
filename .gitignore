@@ -37,3 +37,6 @@ build/
 
 ### Local secrets (Google OAuth, encryption key) ###
 local.env
+
+### macOS ###
+.DS_Store

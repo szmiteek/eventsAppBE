@@ -5,7 +5,7 @@ spring:
     password: user
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
-    show-sql: true
+    show-sql: false
     open-in-view: false
   data:
     web:

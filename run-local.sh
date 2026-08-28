@@ -19,6 +19,9 @@ if [ -z "${APP_MAIL_ENCRYPTION_KEY:-}" ]; then
   exit 1
 fi
 
+# Profil dev włącza CORS dla ng serve na :4200 — bez niego frontend nie dogada się z API.
+export SPRING_PROFILES_ACTIVE="${SPRING_PROFILES_ACTIVE:-dev}"
+
 MVN="${MAVEN_BIN:-mvn}"
 if ! command -v "$MVN" >/dev/null 2>&1; then
   MVN="$HOME/.m2/wrapper/dists/apache-maven-3.9.11-bin/6mqf5t809d9geo83kj4ttckcbc/apache-maven-3.9.11/bin/mvn"
