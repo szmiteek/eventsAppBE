@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/events?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: user
-    password: user
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     show-sql: false
@@ -21,7 +21,7 @@ spring:
     drop-first: false
 
 jwt:
-  secret: "change-this-super-secret-key-before-going-to-production-32bytes-min"
+  secret: ${JWT_SECRET}
   expiration-ms: 86400000
 
 app:
