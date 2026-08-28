@@ -1,8 +1,10 @@
 package com.eventsApp.event.model;
 
+import com.eventsApp.eventElement.model.EventElement;
 import com.eventsApp.eventWork.model.EventWork;
 import com.eventsApp.offer.model.Offer;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -17,6 +19,8 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -41,7 +45,14 @@ public class Event {
     private String comment;
     private Integer offerId;
 
+    @Column(columnDefinition = "TEXT")
+    private String decorationDescription;
+
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
     private Set<EventWork> eventWorks;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<EventElement> eventElements = new ArrayList<>();
 
 }

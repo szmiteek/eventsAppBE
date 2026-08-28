@@ -11,8 +11,10 @@ import java.math.BigDecimal;
 @Data
 public class EventElementCreateCommand {
 
-    @NotNull
+    /** Exactly one of offerId / eventId must be set — the element belongs to an offer or to an event. */
     private Integer offerId;
+
+    private Integer eventId;
 
     @NotBlank
     private String name;

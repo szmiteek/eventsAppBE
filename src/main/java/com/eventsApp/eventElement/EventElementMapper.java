@@ -26,7 +26,8 @@ public class EventElementMapper {
     public static EventElementDTO mapToDTO(EventElement element) {
         return EventElementDTO.builder()
                 .id(element.getId())
-                .offerId(element.getOffer().getId())
+                .offerId(element.getOffer() != null ? element.getOffer().getId() : null)
+                .eventId(element.getEvent() != null ? element.getEvent().getId() : null)
                 .name(element.getName())
                 .quantity(element.getQuantity())
                 .unitPrice(element.getUnitPrice())

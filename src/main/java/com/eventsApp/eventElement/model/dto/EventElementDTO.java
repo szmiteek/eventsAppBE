@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 public class EventElementDTO {
     private Integer id;
     private Integer offerId;
+    private Integer eventId;
     private String name;
     private Integer quantity;
     private BigDecimal unitPrice;

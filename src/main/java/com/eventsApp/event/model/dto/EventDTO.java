@@ -22,5 +22,6 @@ public class EventDTO {
     private Integer guests;
     private BigDecimal price;
     private String comment;
+    private String decorationDescription;
     private int offerId;
 }

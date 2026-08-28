@@ -31,6 +31,7 @@ public class EventMapper {
                 .guests(offer.getGuests())
                 .price(offer.getPrice())
                 .comment(offer.getComment())
+                .decorationDescription(offer.getDecorationDescription())
                 .offerId(offer.getId())
                 .tenantId(offer.getTenantId())
                 .build();
@@ -48,6 +49,7 @@ public class EventMapper {
                 .guests(event.getGuests())
                 .price(event.getPrice())
                 .comment(event.getComment())
+                .decorationDescription(event.getDecorationDescription())
                 .offerId(event.getOfferId() != null ? event.getOfferId() : null)
                 .build();
     }

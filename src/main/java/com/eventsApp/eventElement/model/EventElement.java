@@ -1,5 +1,6 @@
 package com.eventsApp.eventElement.model;
 
+import com.eventsApp.event.model.Event;
 import com.eventsApp.offer.model.Offer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -29,9 +30,13 @@ public class EventElement {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "offer_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "offer_id")
     private Offer offer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id")
+    private Event event;
 
     @Column(nullable = false)
     private String name;

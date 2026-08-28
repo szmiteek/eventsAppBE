@@ -40,6 +40,11 @@ public class EventElementController {
         return ResponseEntity.ok(eventElementService.getAllByOfferId(offerId));
     }
 
+    @GetMapping("/event/{eventId}")
+    public ResponseEntity<List<EventElementDTO>> getAllByEventId(@PathVariable int eventId) {
+        return ResponseEntity.ok(eventElementService.getAllByEventId(eventId));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable int id) {
         eventElementService.delete(id);
