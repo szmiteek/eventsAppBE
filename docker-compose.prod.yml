@@ -1,0 +1,80 @@
+# Wdrozenie produkcyjne. Uruchamiane z katalogu tego repozytorium:
+#
+#   ~/weddingo/
+#     eventsAppBE/     <- tutaj, razem z .env
+#     weddingoFE-/     <- repo frontendu, klonowane obok
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Sekrety siedza w pliku .env obok tego pliku (nie w repozytorium).
+
+# Stala nazwa projektu - dzieki niej wolumeny nazywaja sie zawsze tak samo
+# (weddingo_db_data, weddingo_pdf_data...), niezaleznie od nazwy katalogu.
+name: weddingo
+
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: events
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    # Brak sekcji ports - baza jest dostepna wylacznie z sieci Dockera.
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    mem_limit: 1g
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://db:3306/events?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      APP_MAIL_ENCRYPTION_KEY: ${APP_MAIL_ENCRYPTION_KEY}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET}
+      GOOGLE_OAUTH_REDIRECT_URI: "https://${DOMAIN}/api/integrations/google/callback"
+      GOOGLE_OAUTH_FRONTEND_REDIRECT_URI: "https://${DOMAIN}/settings"
+      APP_STORAGE_OFFER_PDF_DIR: /app/storage/offer-pdfs
+      # Bez profilu dev - CORS wylaczony, bo frontend i API stoja za jednym proxy.
+    volumes:
+      - pdf_data:/app/storage
+    # Limit trzyma JVM w ryzach; bez niego widzialaby cala pamiec hosta
+    # i mogla wypchnac baze z pamieci.
+    mem_limit: 1500m
+
+  web:
+    build: ../weddingoFE-
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Certyfikaty Let's Encrypt musza przetrwac restart kontenera,
+      # inaczej Caddy prosilby o nowy przy kazdym wdrozeniu i trafil na limity.
+      - caddy_data:/data
+      - caddy_config:/config
+    mem_limit: 256m
+
+volumes:
+  db_data:
+  pdf_data:
+  caddy_data:
+  caddy_config:

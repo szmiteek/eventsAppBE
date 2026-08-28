@@ -40,3 +40,6 @@ local.env
 
 ### macOS ###
 .DS_Store
+
+### Sekrety wdrozeniowe ###
+.env
