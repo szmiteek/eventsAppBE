@@ -45,6 +45,10 @@ public class OfferService {
 
     public void delete(int id) {
         Offer offer = getOwnedOffer(id);
+        if (offer.getStatus() == OfferStatus.SIGNED) {
+            throw new EventApiException(
+                    "Signed offer can not be deleted", HttpStatus.CONFLICT);
+        }
         offerRepository.delete(offer);
     }
 
