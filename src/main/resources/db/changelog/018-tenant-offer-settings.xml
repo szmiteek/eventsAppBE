@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- How a tenant's offer PDF looks. Kept apart from tenant so logging in never loads the logo blob. -->
+    <changeSet id="0" author="adrian">
+        <createTable tableName="tenant_offer_settings">
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="INT">
+                <constraints nullable="false"
+                             unique="true"
+                             uniqueConstraintName="uk_tenant_offer_settings_tenant"
+                             foreignKeyName="fk_tenant_offer_settings_tenant"
+                             references="tenant(id)"/>
+            </column>
+            <column name="background_color" type="VARCHAR(7)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="orientation" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="info_fields" type="JSON">
+                <constraints nullable="false"/>
+            </column>
+            <column name="logo_filename" type="VARCHAR(255)"/>
+            <column name="logo_content_type" type="VARCHAR(100)"/>
+            <column name="logo_data" type="LONGBLOB"/>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

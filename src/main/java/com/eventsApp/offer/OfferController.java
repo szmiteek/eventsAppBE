@@ -11,6 +11,7 @@ import com.eventsApp.offer.model.command.OfferCreateCommand;
 import com.eventsApp.offer.model.dto.OfferFilter;
 import com.eventsApp.offerImage.OfferImageService;
 import com.eventsApp.offerImage.model.dto.OfferImageDTO;
+import com.eventsApp.pdf.OfferPdfFieldDTO;
 import com.eventsApp.pdf.OfferPdfOverrides;
 import com.eventsApp.pdf.OfferPdfService;
 import jakarta.validation.Valid;
@@ -61,19 +62,15 @@ public class OfferController {
         return new ResponseEntity(offerService.getById(id), HttpStatus.OK);
     }
 
-    @GetMapping("/{id}/pdf")
-    public ResponseEntity<byte[]> downloadPdf(
-            @PathVariable int id,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(required = false) String venue,
-            @RequestParam(required = false) Integer guests,
-            @RequestParam(required = false) String colors,
-            @RequestParam(required = false) String mainTable,
-            @RequestParam(required = false) String guestsTable,
-            @RequestParam(required = false) String flowers,
-            @RequestParam(required = false) String description) {
-        byte[] pdf = offerPdfService.generateOfferPdf(id,
-                new OfferPdfOverrides(date, venue, guests, colors, mainTable, guestsTable, flowers, description));
+    @GetMapping("/{id}/pdf/fields")
+    public ResponseEntity<List<OfferPdfFieldDTO>> getPdfFields(@PathVariable int id) {
+        return ResponseEntity.ok(offerPdfService.getPdfFields(id));
+    }
+
+    @PostMapping("/{id}/pdf")
+    public ResponseEntity<byte[]> generatePdf(@PathVariable int id,
+                                              @RequestBody(required = false) OfferPdfOverrides overrides) {
+        byte[] pdf = offerPdfService.generateOfferPdf(id, overrides);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"oferta-" + id + ".pdf\"")
