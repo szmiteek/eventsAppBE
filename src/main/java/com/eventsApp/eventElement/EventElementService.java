@@ -41,6 +41,12 @@ public class EventElementService {
         } else {
             element.setEvent(getOwnedEvent(command.getEventId()));
         }
+        if (element.getPosition() == null) {
+            // No explicit position — append below the existing rows.
+            element.setPosition(command.getOfferId() != null
+                    ? eventElementRepository.findMaxPositionByOfferId(command.getOfferId()) + 1
+                    : eventElementRepository.findMaxPositionByEventId(command.getEventId()) + 1);
+        }
 
         EventElement saved = eventElementRepository.save(element);
         recalculateParentPrice(saved);
@@ -75,14 +81,14 @@ public class EventElementService {
 
     public List<EventElementDTO> getAllByOfferId(int offerId) {
         getOwnedOffer(offerId);
-        return eventElementRepository.findAllByOfferId(offerId).stream()
+        return eventElementRepository.findAllByOfferIdOrderByPositionAscIdAsc(offerId).stream()
                 .map(EventElementMapper::mapToDTO)
                 .toList();
     }
 
     public List<EventElementDTO> getAllByEventId(int eventId) {
         getOwnedEvent(eventId);
-        return eventElementRepository.findAllByEventId(eventId).stream()
+        return eventElementRepository.findAllByEventIdOrderByPositionAscIdAsc(eventId).stream()
                 .map(EventElementMapper::mapToDTO)
                 .toList();
     }
@@ -118,7 +124,7 @@ public class EventElementService {
     private void recalculateEventPrice(int eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EventApiException("Event not found", HttpStatus.NOT_FOUND));
-        BigDecimal total = eventElementRepository.findAllByEventId(eventId).stream()
+        BigDecimal total = eventElementRepository.findAllByEventIdOrderByPositionAscIdAsc(eventId).stream()
                 .map(element -> element.getUnitPrice().multiply(BigDecimal.valueOf(element.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         event.setPrice(total);
@@ -137,7 +143,7 @@ public class EventElementService {
     private void recalculateOfferPrice(int offerId) {
         Offer offer = offerRepository.findById(offerId)
                 .orElseThrow(() -> new EventApiException("Offer not found", HttpStatus.NOT_FOUND));
-        BigDecimal total = eventElementRepository.findAllByOfferId(offerId).stream()
+        BigDecimal total = eventElementRepository.findAllByOfferIdOrderByPositionAscIdAsc(offerId).stream()
                 .map(element -> element.getUnitPrice().multiply(BigDecimal.valueOf(element.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         offer.setPrice(total);

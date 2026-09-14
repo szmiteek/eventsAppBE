@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Row order of the pricing table. Existing rows keep their current order, because ids grow with insertion. -->
+    <changeSet id="0" author="adrian">
+        <addColumn tableName="event_element">
+            <column name="position" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <update tableName="event_element">
+            <column name="position" valueComputed="id"/>
+        </update>
+    </changeSet>
+</databaseChangeLog>

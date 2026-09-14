@@ -21,4 +21,8 @@ public class EventElementUpdateCommand {
     @NotNull
     @DecimalMin(value = "0", inclusive = true)
     private BigDecimal unitPrice;
+
+    /** Optional — when missing, the element keeps its current position. */
+    @Min(0)
+    private Integer position;
 }

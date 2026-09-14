@@ -26,4 +26,8 @@ public class EventElementCreateCommand {
     @NotNull
     @DecimalMin(value = "0", inclusive = true)
     private BigDecimal unitPrice;
+
+    /** Optional — when missing, the element is appended below the existing rows. */
+    @Min(0)
+    private Integer position;
 }

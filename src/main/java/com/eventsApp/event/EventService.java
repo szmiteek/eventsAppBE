@@ -82,12 +82,13 @@ public class EventService {
         Event event = eventRepository.save(fromOffer(offer));
 
         // Snapshot the offer's priced elements onto the event so both can evolve independently.
-        List<EventElement> copies = eventElementRepository.findAllByOfferId(offer.getId()).stream()
+        List<EventElement> copies = eventElementRepository.findAllByOfferIdOrderByPositionAscIdAsc(offer.getId()).stream()
                 .map(source -> EventElement.builder()
                         .event(event)
                         .name(source.getName())
                         .quantity(source.getQuantity())
                         .unitPrice(source.getUnitPrice())
+                        .position(source.getPosition())
                         .build())
                 .toList();
         if (!copies.isEmpty()) {

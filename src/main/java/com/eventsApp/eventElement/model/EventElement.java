@@ -46,4 +46,8 @@ public class EventElement {
 
     @Column(name = "unit_price", nullable = false)
     private BigDecimal unitPrice;
+
+    /** Row order in the pricing table — the generated PDF lists rows in exactly this order. */
+    @Column(nullable = false)
+    private Integer position;
 }

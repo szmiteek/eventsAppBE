@@ -19,4 +19,5 @@
     <include file="changelog/014-tenant-mail-connection.xml" relativeToChangelogFile="true"/>
     <include file="changelog/015-offer-decoration-description.xml" relativeToChangelogFile="true"/>
     <include file="changelog/016-event-elements-and-decoration.xml" relativeToChangelogFile="true"/>
+    <include file="changelog/017-event-element-position.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

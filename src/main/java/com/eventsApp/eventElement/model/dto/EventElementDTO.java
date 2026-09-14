@@ -15,4 +15,5 @@ public class EventElementDTO {
     private Integer quantity;
     private BigDecimal unitPrice;
     private BigDecimal sum;
+    private Integer position;
 }

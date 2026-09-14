@@ -14,6 +14,7 @@ public class EventElementMapper {
                 .name(command.getName())
                 .quantity(command.getQuantity())
                 .unitPrice(command.getUnitPrice())
+                .position(command.getPosition())
                 .build();
     }
 
@@ -21,6 +22,9 @@ public class EventElementMapper {
         element.setName(command.getName());
         element.setQuantity(command.getQuantity());
         element.setUnitPrice(command.getUnitPrice());
+        if (command.getPosition() != null) {
+            element.setPosition(command.getPosition());
+        }
     }
 
     public static EventElementDTO mapToDTO(EventElement element) {
@@ -32,6 +36,7 @@ public class EventElementMapper {
                 .quantity(element.getQuantity())
                 .unitPrice(element.getUnitPrice())
                 .sum(element.getUnitPrice().multiply(BigDecimal.valueOf(element.getQuantity())))
+                .position(element.getPosition())
                 .build();
     }
 }

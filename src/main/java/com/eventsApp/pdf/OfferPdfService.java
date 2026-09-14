@@ -98,7 +98,7 @@ public class OfferPdfService {
                 PDPage pricingPage = document.getPage(PRICING_PAGE_INDEX);
                 try (PDPageContentStream cs = new PDPageContentStream(
                         document, pricingPage, PDPageContentStream.AppendMode.APPEND, true, true)) {
-                    drawPricingTable(cs, font, eventElementRepository.findAllByOfferId(offerId));
+                    drawPricingTable(cs, font, eventElementRepository.findAllByOfferIdOrderByPositionAscIdAsc(offerId));
                     drawDescription(cs, font, decorationDescription);
                 }
 
