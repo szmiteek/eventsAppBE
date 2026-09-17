@@ -2,6 +2,8 @@ package com.eventsApp.pdf;
 
 import com.eventsApp.eventElement.model.EventElement;
 import com.eventsApp.offerSettings.model.PdfOrientation;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -11,6 +13,7 @@ import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.util.Matrix;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
@@ -90,9 +93,47 @@ public class OfferPdfRenderer {
                           String decorationDescription) {
     }
 
+    /**
+     * Puts the generated pages at the end of the tenant's own PDF. Page sizes may differ between the two —
+     * a PDF can mix them, so a portrait welcome page works with landscape offer pages.
+     */
+    public byte[] appendToCover(byte[] coverPdf, byte[] generatedPdf) throws IOException {
+        try (PDDocument cover = Loader.loadPDF(coverPdf);
+             PDDocument generated = Loader.loadPDF(generatedPdf)) {
+            new PDFMergerUtility().appendDocument(cover, generated);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            cover.save(out);
+            return out.toByteArray();
+        }
+    }
+
+    /**
+     * Page size of a PDF's first page. The generated pages are rendered at this size when the tenant uploaded
+     * their own PDF, so the whole file keeps one format instead of mixing A4 with, say, a 16:9 presentation.
+     */
+    public PDRectangle firstPageSize(byte[] pdf) throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            if (document.getNumberOfPages() == 0) {
+                return null;
+            }
+            PDPage page = document.getPage(0);
+            PDRectangle box = page.getMediaBox();
+            // A page can carry a /Rotate — the size a reader shows is then the box turned on its side.
+            int rotation = (page.getRotation() % 360 + 360) % 360;
+            return rotation == 90 || rotation == 270
+                    ? new PDRectangle(box.getHeight(), box.getWidth())
+                    : new PDRectangle(box.getWidth(), box.getHeight());
+        }
+    }
+
     public byte[] render(Content content) throws IOException {
+        return render(content, null);
+    }
+
+    /** pageSize overrides the A4 size implied by the orientation setting; null keeps A4. */
+    public byte[] render(Content content, PDRectangle pageSize) throws IOException {
         try (PDDocument document = new PDDocument()) {
-            Layout layout = new Layout(document, content);
+            Layout layout = new Layout(document, content, pageSize);
             try {
                 layout.drawInfoPage();
                 layout.drawPricingPages();
@@ -112,6 +153,9 @@ public class OfferPdfRenderer {
         private final Content content;
         private final PDFont font;
         private final PDRectangle pageSize;
+        /** Page in layout units: the sizes below are A4-based and scaled onto the real page. */
+        private final PDRectangle layoutSize;
+        private final float scale;
         private final boolean portrait;
         private final Color background;
         private final Color text;
@@ -122,14 +166,26 @@ public class OfferPdfRenderer {
         private final List<PageArea> pricingPages = new ArrayList<>();
         private final Map<Integer, Boolean> encodable = new HashMap<>();
 
-        Layout(PDDocument document, Content content) throws IOException {
+        Layout(PDDocument document, Content content, PDRectangle pageSize) throws IOException {
             this.document = document;
             this.content = content;
             this.font = loadFont(document);
-            this.portrait = content.orientation() == PdfOrientation.PORTRAIT;
-            this.pageSize = portrait
-                    ? PDRectangle.A4
-                    : new PDRectangle(PDRectangle.A4.getHeight(), PDRectangle.A4.getWidth());
+            // An imposed size (the tenant's own PDF) wins over the orientation setting, and its own
+            // proportions decide the layout — a 16:9 page is laid out like a landscape one.
+            this.pageSize = pageSize != null
+                    ? pageSize
+                    : content.orientation() == PdfOrientation.PORTRAIT
+                            ? PDRectangle.A4
+                            : new PDRectangle(PDRectangle.A4.getHeight(), PDRectangle.A4.getWidth());
+            this.portrait = this.pageSize.getHeight() > this.pageSize.getWidth();
+
+            // Everything below is measured for an A4 page. On a bigger page those sizes would leave the content
+            // as a thin strip at the top, so the whole drawing is scaled up instead — type, margins and table
+            // grow proportionally, and the extra width of a wider format simply widens the columns.
+            float a4Width = portrait ? PDRectangle.A4.getWidth() : PDRectangle.A4.getHeight();
+            float a4Height = portrait ? PDRectangle.A4.getHeight() : PDRectangle.A4.getWidth();
+            this.scale = Math.min(this.pageSize.getWidth() / a4Width, this.pageSize.getHeight() / a4Height);
+            this.layoutSize = new PDRectangle(this.pageSize.getWidth() / scale, this.pageSize.getHeight() / scale);
             this.background = parseColor(content.backgroundColor());
             this.text = readableTextColor(background);
             this.muted = mix(text, background, 0.4f);
@@ -349,12 +405,15 @@ public class OfferPdfRenderer {
             PDPageContentStream cs = new PDPageContentStream(document, page);
             streams.add(cs);
 
-            float width = pageSize.getWidth();
+            // From here on the stream draws in layout units; the scale maps them onto the real page.
+            cs.transform(Matrix.getScaleInstance(scale, scale));
+
+            float width = layoutSize.getWidth();
             cs.setNonStrokingColor(background);
-            cs.addRect(0, 0, width, pageSize.getHeight());
+            cs.addRect(0, 0, width, layoutSize.getHeight());
             cs.fill();
 
-            float headerTop = pageSize.getHeight() - MARGIN;
+            float headerTop = layoutSize.getHeight() - MARGIN;
             float headerBottom = headerTop - HEADER_HEIGHT;
             float centerY = headerTop - HEADER_HEIGHT / 2;
 
@@ -390,7 +449,7 @@ public class OfferPdfRenderer {
         }
 
         private float contentWidth() {
-            return pageSize.getWidth() - 2 * MARGIN;
+            return layoutSize.getWidth() - 2 * MARGIN;
         }
 
         // ---- drawing primitives ----

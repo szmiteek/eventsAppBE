@@ -5,6 +5,7 @@ import com.eventsApp.offerSettings.model.command.OfferSettingsUpdateCommand;
 import com.eventsApp.offerSettings.model.dto.OfferSettingsDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -50,5 +51,24 @@ public class OfferSettingsController {
     @DeleteMapping("/logo")
     public ResponseEntity<OfferSettingsDTO> deleteLogo() {
         return ResponseEntity.ok(offerSettingsService.deleteLogo());
+    }
+
+    @PostMapping(value = "/cover-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<OfferSettingsDTO> uploadCoverPdf(@RequestParam("coverPdf") MultipartFile coverPdf) {
+        return ResponseEntity.ok(offerSettingsService.uploadCoverPdf(coverPdf));
+    }
+
+    @GetMapping("/cover-pdf")
+    public ResponseEntity<byte[]> getCoverPdf() {
+        OfferSettingsService.CoverPdf coverPdf = offerSettingsService.getOwnCoverPdf();
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + coverPdf.filename() + "\"")
+                .body(coverPdf.data());
+    }
+
+    @DeleteMapping("/cover-pdf")
+    public ResponseEntity<OfferSettingsDTO> deleteCoverPdf() {
+        return ResponseEntity.ok(offerSettingsService.deleteCoverPdf());
     }
 }

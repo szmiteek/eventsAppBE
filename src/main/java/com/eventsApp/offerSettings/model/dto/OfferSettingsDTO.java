@@ -14,6 +14,10 @@ public class OfferSettingsDTO {
     private PdfOrientation orientation;
     private List<OfferInfoField> infoFields;
     private boolean hasLogo;
+    /** The tenant's own PDF that the generated pages are appended to. */
+    private boolean hasCoverPdf;
+    private String coverPdfFilename;
+    private Integer coverPdfPages;
     /** Every field the tenant can choose from, with its label — the settings page renders straight from this. */
     private List<OfferInfoFieldDTO> availableFields;
     private int maxInfoFields;

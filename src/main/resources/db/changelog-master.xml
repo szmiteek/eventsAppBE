@@ -21,4 +21,5 @@
     <include file="changelog/016-event-elements-and-decoration.xml" relativeToChangelogFile="true"/>
     <include file="changelog/017-event-element-position.xml" relativeToChangelogFile="true"/>
     <include file="changelog/018-tenant-offer-settings.xml" relativeToChangelogFile="true"/>
+    <include file="changelog/019-tenant-offer-cover-pdf.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

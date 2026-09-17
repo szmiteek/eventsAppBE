@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        The tenant's own PDF (welcome pages), which the generated pages are appended to.
+        Only the metadata lives next to the settings; the file itself sits in its own table, so reading
+        the settings - which happens on every PDF modal - never drags a multi-megabyte blob along.
+    -->
+    <changeSet id="0" author="adrian">
+        <addColumn tableName="tenant_offer_settings">
+            <column name="cover_pdf_filename" type="VARCHAR(255)"/>
+            <column name="cover_pdf_pages" type="INT"/>
+        </addColumn>
+
+        <createTable tableName="tenant_offer_cover_pdf">
+            <column name="tenant_id" type="INT">
+                <constraints primaryKey="true"
+                             nullable="false"
+                             foreignKeyName="fk_tenant_offer_cover_pdf_tenant"
+                             references="tenant(id)"/>
+            </column>
+            <column name="data" type="LONGBLOB">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

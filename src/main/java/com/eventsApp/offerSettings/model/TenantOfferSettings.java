@@ -59,4 +59,11 @@ public class TenantOfferSettings {
     @Lob
     @Column(name = "logo_data", columnDefinition = "LONGBLOB")
     private byte[] logoData;
+
+    /** Metadata of the tenant's own PDF; the file itself lives in TenantOfferCoverPdf. */
+    @Column(name = "cover_pdf_filename")
+    private String coverPdfFilename;
+
+    @Column(name = "cover_pdf_pages")
+    private Integer coverPdfPages;
 }

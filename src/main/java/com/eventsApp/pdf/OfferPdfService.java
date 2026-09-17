@@ -12,6 +12,7 @@ import com.eventsApp.offerSettings.OfferSettingsService;
 import com.eventsApp.offerSettings.model.OfferInfoField;
 import com.eventsApp.offerSettings.model.TenantOfferSettings;
 import lombok.RequiredArgsConstructor;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -66,8 +67,13 @@ public class OfferPdfService {
                 .map(OfferImage::getData)
                 .toList();
 
+        // The tenant's own PDF (welcome pages) comes first; the generated pages are appended to it and take
+        // its page size, so the whole file has one format instead of mixing A4 with another.
+        Optional<byte[]> coverPdf = offerSettingsService.resolveCoverPdfData(tenantId);
+
         byte[] pdf;
         try {
+            PDRectangle pageSize = coverPdf.isPresent() ? offerPdfRenderer.firstPageSize(coverPdf.get()) : null;
             pdf = offerPdfRenderer.render(new OfferPdfRenderer.Content(
                     settings.getBackgroundColor(),
                     settings.getOrientation(),
@@ -75,7 +81,11 @@ public class OfferPdfService {
                     fields,
                     images,
                     eventElementRepository.findAllByOfferIdOrderByPositionAscIdAsc(offerId),
-                    decorationDescription));
+                    decorationDescription), pageSize);
+
+            if (coverPdf.isPresent()) {
+                pdf = offerPdfRenderer.appendToCover(coverPdf.get(), pdf);
+            }
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to generate offer PDF", e);
         }
