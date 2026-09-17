@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface OfferImageRepository extends JpaRepository<OfferImage, Long> {
     List<OfferImage> findByOfferId(int offerId);
+
+    long countByOfferId(int offerId);
 }

@@ -22,6 +22,10 @@ import static com.eventsApp.offerImage.OfferImageMapper.mapToDTO;
 @Service
 @RequiredArgsConstructor
 public class OfferImageService {
+
+    /** How many pictures one offer can hold, counted across the client form and the tenant's own uploads. */
+    public static final int MAX_IMAGES_PER_OFFER = 5;
+
     private final OfferImageRepository offerImageRepository;
     private final OfferRepository offerRepository;
     private final EventRepository eventRepository;
@@ -29,6 +33,14 @@ public class OfferImageService {
 
     public List<OfferImageDTO> saveAll(int offerId, List<MultipartFile> files) {
         Offer offer = getOwnedOffer(offerId);
+
+        // The limit covers the whole offer, so what is already attached counts towards it.
+        long alreadyAttached = offerImageRepository.countByOfferId(offerId);
+        if (alreadyAttached + files.size() > MAX_IMAGES_PER_OFFER) {
+            throw new EventApiException(
+                    "Oferta może mieć maksymalnie " + MAX_IMAGES_PER_OFFER + " zdjęć, a ma już " + alreadyAttached + ".",
+                    HttpStatus.BAD_REQUEST);
+        }
 
         List<OfferImage> images = files.stream()
                 .map(file -> toOfferImage(offer, file))

@@ -7,7 +7,10 @@ import com.eventsApp.offer.OfferRepository;
 import com.eventsApp.offer.OfferStatus;
 import com.eventsApp.offer.model.Offer;
 import com.eventsApp.offerImage.OfferImageRepository;
+import com.eventsApp.offerImage.OfferImageService;
 import com.eventsApp.offerImage.model.OfferImage;
+import com.eventsApp.offerSettings.OfferSettingsService;
+import com.eventsApp.offerSettings.model.TenantOfferSettings;
 import com.eventsApp.publicform.model.command.PublicOfferCommand;
 import com.eventsApp.publicform.model.dto.PublicTenantInfoDTO;
 import lombok.RequiredArgsConstructor;
@@ -43,8 +46,15 @@ public class PublicOfferService {
         if (!rateLimiter.allow(token)) {
             throw new EventApiException("Zbyt wiele zgłoszeń, spróbuj ponownie później", HttpStatus.TOO_MANY_REQUESTS);
         }
-        if (images == null || images.stream().allMatch(MultipartFile::isEmpty)) {
+
+        long selectedImages = images == null ? 0 : images.stream().filter(file -> !file.isEmpty()).count();
+        if (selectedImages == 0) {
             throw new EventApiException("Dodaj co najmniej jedno zdjęcie", HttpStatus.BAD_REQUEST);
+        }
+        if (selectedImages > OfferImageService.MAX_IMAGES_PER_OFFER) {
+            throw new EventApiException(
+                    "Możesz dodać maksymalnie " + OfferImageService.MAX_IMAGES_PER_OFFER + " zdjęć",
+                    HttpStatus.BAD_REQUEST);
         }
 
         Tenant tenant = findActiveTenant(token);
