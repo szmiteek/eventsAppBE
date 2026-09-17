@@ -1,9 +1,11 @@
 package com.eventsApp.publicform;
 
+import com.eventsApp.offerSettings.model.TenantOfferSettings;
 import com.eventsApp.publicform.model.command.PublicOfferCommand;
 import com.eventsApp.publicform.model.dto.PublicTenantInfoDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.util.List;
 
 @RestController
@@ -28,6 +31,16 @@ public class PublicOfferController {
     @GetMapping("/{token}")
     public ResponseEntity<PublicTenantInfoDTO> getTenantInfo(@PathVariable String token) {
         return ResponseEntity.ok(publicOfferService.getTenantInfo(token));
+    }
+
+    /** Used straight as an <img> source on the public form, so it carries a cache header. */
+    @GetMapping("/{token}/logo")
+    public ResponseEntity<byte[]> getLogo(@PathVariable String token) {
+        TenantOfferSettings settings = publicOfferService.getLogo(token);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(settings.getLogoContentType()))
+                .cacheControl(CacheControl.maxAge(Duration.ofHours(1)).cachePublic())
+                .body(settings.getLogoData());
     }
 
     @PostMapping(value = "/{token}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

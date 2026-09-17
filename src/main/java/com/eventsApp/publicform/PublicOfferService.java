@@ -30,13 +30,25 @@ public class PublicOfferService {
     private final TenantRepository tenantRepository;
     private final OfferRepository offerRepository;
     private final OfferImageRepository offerImageRepository;
+    private final OfferSettingsService offerSettingsService;
     private final PublicOfferRateLimiter rateLimiter;
 
     public PublicTenantInfoDTO getTenantInfo(String token) {
         Tenant tenant = findActiveTenant(token);
         return PublicTenantInfoDTO.builder()
                 .companyName(tenant.getCompanyName())
+                .hasLogo(hasLogo(offerSettingsService.resolveForTenant(tenant.getId())))
                 .build();
+    }
+
+    /** The logo shown on the tenant's public form — served without auth, like the form itself. */
+    public TenantOfferSettings getLogo(String token) {
+        Tenant tenant = findActiveTenant(token);
+        TenantOfferSettings settings = offerSettingsService.resolveForTenant(tenant.getId());
+        if (!hasLogo(settings)) {
+            throw new EventApiException("Not found", HttpStatus.NOT_FOUND);
+        }
+        return settings;
     }
 
     public void submit(String token, PublicOfferCommand command, List<MultipartFile> images) {
