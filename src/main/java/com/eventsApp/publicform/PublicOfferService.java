@@ -66,18 +66,21 @@ public class PublicOfferService {
                 .mainTableSeats(command.getMainTableSeats())
                 .guestsTableType(command.getGuestsTableType())
                 .flowersType(command.getFlowersType())
+                .appetizersOnTable(Boolean.TRUE.equals(command.getAppetizersOnTable()))
                 .status(OfferStatus.NOT_READY)
                 .createdDate(LocalDate.now())
                 .build();
         Offer saved = offerRepository.save(offer);
 
-        if (images != null && !images.isEmpty()) {
-            List<OfferImage> offerImages = images.stream()
-                    .filter(file -> !file.isEmpty())
-                    .map(file -> toOfferImage(saved, file))
-                    .toList();
-            offerImageRepository.saveAll(offerImages);
-        }
+        List<OfferImage> offerImages = images.stream()
+                .filter(file -> !file.isEmpty())
+                .map(file -> toOfferImage(saved, file))
+                .toList();
+        offerImageRepository.saveAll(offerImages);
+    }
+
+    private boolean hasLogo(TenantOfferSettings settings) {
+        return settings.getLogoData() != null && settings.getLogoData().length > 0;
     }
 
     private OfferImage toOfferImage(Offer offer, MultipartFile file) {

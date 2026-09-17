@@ -60,6 +60,10 @@ public class PublicOfferCommand {
     @NotBlank(message = "EMPTY_VALUE")
     private String flowersType;
 
+    /** Boolean rather than boolean, so a form that never answered fails validation instead of quietly saving "no". */
+    @NotNull(message = "EMPTY_VALUE")
+    private Boolean appetizersOnTable;
+
     /** Honeypot — musi pozostać puste. Wypełnione przez bota = cichy sukces bez zapisu. */
     private String honeypot;
 }
