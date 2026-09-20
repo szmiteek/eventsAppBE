@@ -81,6 +81,7 @@ public class PublicOfferService {
                 .budget(command.getBudget())
                 .guests(command.getGuests())
                 .eventType(command.getEventType())
+                .afterWeddingParty(Boolean.TRUE.equals(command.getAfterWeddingParty()))
                 .decorationType(command.getDecorationType())
                 .colors(command.getColors())
                 .description(command.getDescription())

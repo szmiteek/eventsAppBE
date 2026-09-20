@@ -53,6 +53,9 @@ public class Offer {
     @Column(columnDefinition = "json")
     private List<String> eventType;
 
+    /** Czy po weselu odbywają się poprawiny. */
+    private boolean afterWeddingParty;
+
     private String mainTableType;
     private String mainTableSeats;
     private String guestsTableType;

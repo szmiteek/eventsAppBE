@@ -33,6 +33,7 @@ public class OfferDTO {
     private OfferStatus status;
 
     private List<String> eventType;
+    private boolean afterWeddingParty;
     private String mainTableType;
     private String mainTableSeats;
     private String guestsTableType;

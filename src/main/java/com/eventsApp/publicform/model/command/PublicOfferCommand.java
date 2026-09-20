@@ -39,6 +39,10 @@ public class PublicOfferCommand {
     @NotEmpty(message = "EMPTY_VALUE")
     private List<String> eventType;
 
+    /** Boolean rather than boolean, so a form that never answered fails validation instead of quietly saving "no". */
+    @NotNull(message = "EMPTY_VALUE")
+    private Boolean afterWeddingParty;
+
     @NotEmpty(message = "EMPTY_VALUE")
     private List<String> decorationType;
 

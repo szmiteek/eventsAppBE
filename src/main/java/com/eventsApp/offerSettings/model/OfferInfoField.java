@@ -20,6 +20,7 @@ public enum OfferInfoField {
     BUDGET("Orientacyjny budżet", offer -> offer.getBudget() != null ? offer.getBudget() + " zł" : null),
     GUESTS("Liczba gości", offer -> offer.getGuests() != null ? String.valueOf(offer.getGuests()) : null),
     EVENT_TYPE("Rodzaj wydarzenia", offer -> join(offer.getEventType())),
+    AFTER_WEDDING_PARTY("Poprawiny", offer -> offer.isAfterWeddingParty() ? "Tak" : "Nie"),
     DECORATION_TYPE("Rodzaj kompozycji", offer -> join(offer.getDecorationType())),
     MAIN_TABLE_TYPE("Typ stołu prezydialnego", Offer::getMainTableType),
     MAIN_TABLE_SEATS("Przy stole prezydialnym", Offer::getMainTableSeats),

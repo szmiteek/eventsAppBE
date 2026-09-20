@@ -25,6 +25,7 @@ public class OfferUpdateCommand {
     private BigDecimal price;
 
     private List<String> eventType;
+    private Boolean afterWeddingParty;
     private String mainTableType;
     private String mainTableSeats;
     private String guestsTableType;

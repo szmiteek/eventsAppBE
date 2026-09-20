@@ -46,6 +46,9 @@ public class Event {
     private String comment;
     private Integer offerId;
 
+    /** Czy po weselu odbywają się poprawiny — przepisywane z oferty przy tworzeniu eventu. */
+    private boolean afterWeddingParty;
+
     @Column(columnDefinition = "TEXT")
     private String decorationDescription;
 

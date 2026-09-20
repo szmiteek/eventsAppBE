@@ -23,5 +23,6 @@ public class EventDTO {
     private BigDecimal price;
     private String comment;
     private String decorationDescription;
+    private boolean afterWeddingParty;
     private int offerId;
 }

@@ -34,6 +34,7 @@ public class OfferCreateCommand {
     private Integer guests;
 
     private List<String> eventType;
+    private boolean afterWeddingParty;
     private String mainTableType;
     private String mainTableSeats;
     private String guestsTableType;

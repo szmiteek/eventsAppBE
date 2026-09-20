@@ -18,6 +18,7 @@ public class OfferMapper {
                 .budget(command.getBudget())
                 .guests(command.getGuests())
                 .eventType(command.getEventType())
+                .afterWeddingParty(command.isAfterWeddingParty())
                 .mainTableType(command.getMainTableType())
                 .mainTableSeats(command.getMainTableSeats())
                 .guestsTableType(command.getGuestsTableType())
@@ -44,6 +45,7 @@ public class OfferMapper {
                 .comment(offer.getComment() != null ? offer.getComment() : null)
                 .status(offer.getStatus())
                 .eventType(offer.getEventType())
+                .afterWeddingParty(offer.isAfterWeddingParty())
                 .mainTableType(offer.getMainTableType())
                 .mainTableSeats(offer.getMainTableSeats())
                 .guestsTableType(offer.getGuestsTableType())
@@ -67,6 +69,7 @@ public class OfferMapper {
         Optional.ofNullable(command.getComment()).ifPresent(offer::setComment);
         Optional.ofNullable(command.getPrice()).ifPresent(offer::setPrice);
         Optional.ofNullable(command.getEventType()).ifPresent(offer::setEventType);
+        Optional.ofNullable(command.getAfterWeddingParty()).ifPresent(offer::setAfterWeddingParty);
         Optional.ofNullable(command.getMainTableType()).ifPresent(offer::setMainTableType);
         Optional.ofNullable(command.getMainTableSeats()).ifPresent(offer::setMainTableSeats);
         Optional.ofNullable(command.getGuestsTableType()).ifPresent(offer::setGuestsTableType);
