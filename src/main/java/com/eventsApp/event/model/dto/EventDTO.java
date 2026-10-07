@@ -21,8 +21,11 @@ public class EventDTO {
     private Integer budget;
     private Integer guests;
     private BigDecimal price;
+    /** Null means unpaid — the client derives the switch from this. */
+    private BigDecimal depositAmount;
     private String comment;
     private String decorationDescription;
     private boolean afterWeddingParty;
-    private int offerId;
+    /** Null for an event added by hand — only an event created from a signed offer points at one. */
+    private Integer offerId;
 }

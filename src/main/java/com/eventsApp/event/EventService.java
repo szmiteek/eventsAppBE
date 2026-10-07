@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -64,7 +65,24 @@ public class EventService {
         Optional.ofNullable(command.getPrice()).ifPresent(event::setPrice);
         Optional.ofNullable(command.getComment()).ifPresent(event::setComment);
         Optional.ofNullable(command.getDecorationDescription()).ifPresent(event::setDecorationDescription);
+        applyDeposit(event, command);
         return mapToDTO(event);
+    }
+
+    /** Switching the deposit off clears the amount, so an unpaid deposit can never carry a leftover value. */
+    private void applyDeposit(Event event, EventUpdateCommand command) {
+        if (command.getDepositPaid() == null) {
+            return;
+        }
+        if (!command.getDepositPaid()) {
+            event.setDepositAmount(null);
+            return;
+        }
+        BigDecimal amount = command.getDepositAmount();
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new EventApiException("Podaj kwotę zaliczki większą od zera.", HttpStatus.BAD_REQUEST);
+        }
+        event.setDepositAmount(amount);
     }
 
     /** Deleting an event also removes the offer it came from — that is the only way a signed offer can be deleted. */

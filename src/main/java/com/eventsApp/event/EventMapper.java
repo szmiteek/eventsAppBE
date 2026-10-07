@@ -49,10 +49,11 @@ public class EventMapper {
                 .budget(event.getBudget())
                 .guests(event.getGuests())
                 .price(event.getPrice())
+                .depositAmount(event.getDepositAmount())
                 .comment(event.getComment())
                 .decorationDescription(event.getDecorationDescription())
                 .afterWeddingParty(event.isAfterWeddingParty())
-                .offerId(event.getOfferId() != null ? event.getOfferId() : null)
+                .offerId(event.getOfferId())
                 .build();
     }
 }

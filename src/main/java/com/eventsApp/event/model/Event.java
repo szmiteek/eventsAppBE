@@ -3,15 +3,7 @@ package com.eventsApp.event.model;
 import com.eventsApp.eventElement.model.EventElement;
 import com.eventsApp.eventWork.model.EventWork;
 import com.eventsApp.offer.model.Offer;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.OrderBy;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -43,10 +35,11 @@ public class Event {
     private Integer budget;
     private Integer guests;
     private BigDecimal price;
+    /** Null means the deposit has not been paid — the amount is the whole state, so the two can't disagree. */
+    private BigDecimal depositAmount;
     private String comment;
     private Integer offerId;
 
-    /** Czy po weselu odbywają się poprawiny — przepisywane z oferty przy tworzeniu eventu. */
     private boolean afterWeddingParty;
 
     @Column(columnDefinition = "TEXT")
