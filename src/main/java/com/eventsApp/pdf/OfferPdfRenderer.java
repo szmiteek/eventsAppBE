@@ -56,10 +56,12 @@ public class OfferPdfRenderer {
     private static final float TITLE_SIZE = 24f;
     private static final float LOGO_MAX_WIDTH = 150f;
 
-    private static final float LABEL_SIZE = 8.5f;
+    private static final float LABEL_SIZE = 10f;
     private static final float LABEL_GAP = 8f;
-    private static final float VALUE_SIZE = 12f;
-    private static final float VALUE_LINE_HEIGHT = 16f;
+    private static final float VALUE_SIZE = 15f;
+    private static final float VALUE_LINE_HEIGHT = 20f;
+    /** Maksymalna wysokość rzędu zdjęć — bez limitu brały całą resztę strony i dominowały nad danymi. */
+    private static final float IMAGE_ROW_MAX_HEIGHT = 230f;
     private static final int VALUE_MAX_LINES = 3;
     private static final float CELL_GAP_X = 24f;
     private static final float CELL_GAP_Y = 20f;
@@ -200,9 +202,15 @@ public class OfferPdfRenderer {
             float contentWidth = contentWidth();
             int columns = portrait ? 2 : 4;
             float cellWidth = (contentWidth - CELL_GAP_X * (columns - 1)) / columns;
-            float cellHeight = LABEL_SIZE + LABEL_GAP + VALUE_MAX_LINES * VALUE_LINE_HEIGHT;
 
             List<Field> fields = content.fields() != null ? content.fields() : List.of();
+            // Wysokość wiersza idzie za najdłuższą wartością. Sztywne trzy linie zostawiały puste pasy
+            // między wierszami, bo większość odpowiedzi mieści się w jednej.
+            int valueLines = 1;
+            for (Field field : fields) {
+                valueLines = Math.max(valueLines, valueLines(field, cellWidth).size());
+            }
+            float cellHeight = LABEL_SIZE + LABEL_GAP + valueLines * VALUE_LINE_HEIGHT;
             for (int i = 0; i < fields.size(); i++) {
                 float x = MARGIN + (i % columns) * (cellWidth + CELL_GAP_X);
                 float top = page.contentTop() - (i / columns) * (cellHeight + CELL_GAP_Y);
@@ -218,13 +226,17 @@ public class OfferPdfRenderer {
             String label = sanitizeLine(field.label()).toUpperCase(POLISH);
             drawText(cs, fitLine(label, LABEL_SIZE, width), x, top - LABEL_SIZE, LABEL_SIZE, muted);
 
-            String value = sanitizeLine(field.value() != null ? field.value().replaceAll("\\R", " ") : "").trim();
-            List<String> lines = wrap(value.isEmpty() ? "-" : value, VALUE_SIZE, width, VALUE_MAX_LINES);
+            List<String> lines = valueLines(field, width);
             float baseline = top - LABEL_SIZE - LABEL_GAP - VALUE_SIZE;
             for (String line : lines) {
                 drawText(cs, line, x, baseline, VALUE_SIZE, text);
                 baseline -= VALUE_LINE_HEIGHT;
             }
+        }
+
+        private List<String> valueLines(Field field, float width) throws IOException {
+            String value = sanitizeLine(field.value() != null ? field.value().replaceAll("\\R", " ") : "").trim();
+            return wrap(value.isEmpty() ? "-" : value, VALUE_SIZE, width, VALUE_MAX_LINES);
         }
 
         private void drawImages(PDPageContentStream cs, float top, float contentWidth) throws IOException {
@@ -239,16 +251,21 @@ public class OfferPdfRenderer {
                 }
             }
 
+            // Landscape: one row of four. Portrait: a 2×2 grid.
+            int columns = portrait ? 2 : MAX_IMAGES;
+            int rows = portrait ? 2 : 1;
+
+            // Pasek zdjęć idzie zaraz pod danymi, a nadmiar wysokości zostaje pustym marginesem na dole strony.
+            // Limit dotyczy rzędu, nie całego paska — inaczej w pionie dwa rzędy dzieliłyby się tą samą wysokością.
+            float available = top - LABEL_SIZE - 12f - MARGIN;
+            float maxHeight = rows * IMAGE_ROW_MAX_HEIGHT + IMAGE_GAP * (rows - 1);
+            float areaHeight = Math.min(available, maxHeight);
             float areaTop = top - LABEL_SIZE - 12f;
-            float areaHeight = areaTop - MARGIN;
             if (images.isEmpty() || areaHeight < 60f) {
                 return;
             }
             drawText(cs, "NADESŁANE INSPIRACJE", MARGIN, top - LABEL_SIZE, LABEL_SIZE, muted);
 
-            // Landscape: one row of four. Portrait: a 2×2 grid.
-            int columns = portrait ? 2 : MAX_IMAGES;
-            int rows = portrait ? 2 : 1;
             float boxWidth = (contentWidth - IMAGE_GAP * (columns - 1)) / columns;
             float boxHeight = (areaHeight - IMAGE_GAP * (rows - 1)) / rows;
 
