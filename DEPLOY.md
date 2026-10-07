@@ -83,7 +83,7 @@ Na koniec sprawdź w przeglądarce:
 
 1. **Ustawienia → Ustawienia oferty** — logo, kolor tła, orientacja, wybór i kolejność pól, własny PDF.
 2. **Oferta → Przygotuj ofertę PDF** — „Zapisz” zapisuje dane bez generowania pliku, „Generuj PDF” otwiera podgląd.
-3. **Formularz dla klientów** (`/formularz/<token>`) — logo w prawym górnym rogu, pytanie o przekąski, limit 5 zdjęć.
+3. **Formularz dla klientów** (`/formularz/<token>`) — logo w prawym górnym rogu, pytanie o przystawki, limit 5 zdjęć.
 
 ## Wdrożenie tylko jednej części
 
