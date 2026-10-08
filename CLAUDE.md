@@ -116,7 +116,10 @@ generowania PDF-a**. Pełna ścieżka dodania pola:
   Produkcyjnie to Resend na zweryfikowanej domenie `weddingo.pl` (host `smtp.resend.com`, login
   `resend`, hasło = klucz API). Konfiguracja: `SPRING_MAIL_*` i `APP_MAIL_ALERT_FROM` w `local.env` /
   `.env`; bez `SPRING_MAIL_HOST` Spring nie tworzy `JavaMailSender`, a alerty są pomijane z wpisem w logu.
-- Alert nie może przewrócić zgłoszenia klienta: wysyłka jest w `try/catch`, błąd ląduje w logu.
+- Alert nie może przewrócić zgłoszenia klienta ani go opóźnić: `SystemMailSender.sendAsync` działa na
+  osobnej, ograniczonej puli (`AsyncConfiguration`, `@EnableAsync`), a błąd ląduje w logu. Do wysyłki
+  idą same napisy — nie przekazuj encji JPA na inny wątek. Nowa praca „w tle” bierze własną pulę,
+  nie wspólną.
 - Adres alertów to `tenant.alert_email`; `NULL` znaczy „adres konta” (`Tenant.resolveAlertEmail()`),
   `alert_email_enabled` to switch w Ustawienia → Ustawienia e-mail.
 - Nie mieszaj dróg: nie wysyłaj alertów przez Gmaila tenanta (wymaga podłączenia i zjada jego limity),

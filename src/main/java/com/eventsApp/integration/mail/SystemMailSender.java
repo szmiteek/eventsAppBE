@@ -1,10 +1,12 @@
 package com.eventsApp.integration.mail;
 
+import com.eventsApp.configuration.AsyncConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 /**
@@ -30,6 +32,19 @@ public class SystemMailSender {
 
     public boolean isConfigured() {
         return mailSender.getIfAvailable() != null && !from.isBlank();
+    }
+
+    /**
+     * Wysyła na osobnym wątku, żeby żądanie, które wywołało wiadomość, nie czekało na serwer pocztowy.
+     * Wyjątek nie ma dokąd wrócić (wołający już dawno odpowiedział), więc błąd jest logowany tutaj.
+     */
+    @Async(AsyncConfiguration.MAIL_EXECUTOR)
+    public void sendAsync(String to, String subject, String body) {
+        try {
+            send(to, subject, body);
+        } catch (Exception e) {
+            log.warn("Nie udało się wysłać wiadomości systemowej do {}: {}", to, e.getMessage());
+        }
     }
 
     public void send(String to, String subject, String body) {

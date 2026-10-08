@@ -20,8 +20,10 @@ public class NewOfferAlertService {
     private final SystemMailSender systemMailSender;
 
     /**
-     * Alert nigdy nie może przewrócić zgłoszenia: oferta jest już zapisana, a klient po drugiej stronie
-     * formularza nie ma nic wspólnego z tym, że serwer pocztowy akurat nie odpowiada.
+     * Alert nigdy nie może przewrócić zgłoszenia ani go opóźnić: oferta jest już zapisana, a klient po
+     * drugiej stronie formularza nie ma nic wspólnego z tym, że serwer pocztowy akurat wolno odpowiada.
+     * Treść składamy tutaj, na wątku żądania, i do wysyłki idą same napisy — encje JPA nie przechodzą
+     * między wątkami, bo ich leniwe kolekcje bez sesji by się wywróciły.
      */
     public void sendNewOfferAlert(Tenant tenant, Offer offer) {
         if (!tenant.isAlertEmailEnabled()) {
@@ -32,12 +34,12 @@ public class NewOfferAlertService {
             return;
         }
         try {
-            systemMailSender.send(
+            systemMailSender.sendAsync(
                     recipient,
                     "Nowe zapytanie o ofertę – " + offer.getPersonalData(),
                     buildBody(offer));
         } catch (Exception e) {
-            log.warn("Nie udało się wysłać alertu o ofercie {} do tenanta {}: {}",
+            log.warn("Nie udało się zlecić alertu o ofercie {} dla tenanta {}: {}",
                     offer.getId(), tenant.getId(), e.getMessage());
         }
     }
