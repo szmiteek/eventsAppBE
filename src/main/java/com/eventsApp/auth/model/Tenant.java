@@ -49,4 +49,16 @@ public class Tenant {
 
     @Column(columnDefinition = "TEXT")
     private String emailMessage;
+
+    /** Adres alertów o nowym zapytaniu; null znaczy „ten, na który założono konto”. */
+    private String alertEmail;
+
+    /** Builder.Default, bo nowy tenant ma dostawać alerty od razu — tak jak mówi wartość domyślna kolumny. */
+    @Builder.Default
+    private boolean alertEmailEnabled = true;
+
+    /** Adres, na który faktycznie idą alerty. */
+    public String resolveAlertEmail() {
+        return alertEmail != null && !alertEmail.isBlank() ? alertEmail : email;
+    }
 }

@@ -107,6 +107,21 @@ generowania PDF-a**. Pełna ścieżka dodania pola:
 - Gotowe pliki lądują w `app.storage.offer-pdf-dir` (domyślnie `./storage/offer-pdfs`).
 - Podpisanej oferty (`SIGNED`) nie da się już edytować — modal PDF przechodzi w tryb tylko do odczytu.
 
+## Poczta wychodząca — dwie niezależne drogi
+
+- **Oferty do klientów** idą ze skrzynki Google samego tenanta (`TenantMailSender` →
+  `GmailTenantMailSender`, OAuth). Bez podłączonego konta wysyłka oferty kończy się błędem.
+- **Alerty o nowym zapytaniu z formularza** idą ze skrzynki *aplikacji* przez zwykły SMTP
+  (`SystemMailSender` → `NewOfferAlertService`), więc działają bez podłączania czegokolwiek.
+  Produkcyjnie to Resend na zweryfikowanej domenie `weddingo.pl` (host `smtp.resend.com`, login
+  `resend`, hasło = klucz API). Konfiguracja: `SPRING_MAIL_*` i `APP_MAIL_ALERT_FROM` w `local.env` /
+  `.env`; bez `SPRING_MAIL_HOST` Spring nie tworzy `JavaMailSender`, a alerty są pomijane z wpisem w logu.
+- Alert nie może przewrócić zgłoszenia klienta: wysyłka jest w `try/catch`, błąd ląduje w logu.
+- Adres alertów to `tenant.alert_email`; `NULL` znaczy „adres konta” (`Tenant.resolveAlertEmail()`),
+  `alert_email_enabled` to switch w Ustawienia → Ustawienia e-mail.
+- Nie mieszaj dróg: nie wysyłaj alertów przez Gmaila tenanta (wymaga podłączenia i zjada jego limity),
+  ani ofert przez skrzynkę systemową (klient dostałby je od nadawcy, którego nie zna).
+
 ## Konwencje
 
 - Kod, nazwy pól i komentarze po **angielsku**; wszystko, co widzi użytkownik (etykiety, komunikaty

@@ -15,6 +15,17 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 30MB
+  # Skrzynka samej aplikacji — wysyła alerty do tenantów. Oferty do klientów idą inną drogą,
+  # ze skrzynki Google tenanta. Hosta ustawia środowisko (SPRING_MAIL_HOST): bez niego Spring
+  # nie tworzy JavaMailSender, a alerty są pomijane z wpisem w logu.
+  mail:
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+
   liquibase:
     enabled: true
     change-log: classpath:/db/changelog-master.xml
@@ -29,6 +40,7 @@ app:
     offer-pdf-dir: ${APP_STORAGE_OFFER_PDF_DIR:./storage/offer-pdfs}
   mail:
     encryption-key: ${APP_MAIL_ENCRYPTION_KEY:}
+    alert-from: ${APP_MAIL_ALERT_FROM:}
   google-oauth:
     client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
     client-secret: ${GOOGLE_OAUTH_CLIENT_SECRET:}

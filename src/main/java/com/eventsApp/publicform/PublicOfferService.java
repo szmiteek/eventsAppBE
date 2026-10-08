@@ -2,6 +2,7 @@ package com.eventsApp.publicform;
 
 import com.eventsApp.auth.TenantRepository;
 import com.eventsApp.auth.model.Tenant;
+import com.eventsApp.email.NewOfferAlertService;
 import com.eventsApp.exceptions.EventApiException;
 import com.eventsApp.offer.OfferRepository;
 import com.eventsApp.offer.OfferStatus;
@@ -32,6 +33,7 @@ public class PublicOfferService {
     private final OfferImageRepository offerImageRepository;
     private final OfferSettingsService offerSettingsService;
     private final PublicOfferRateLimiter rateLimiter;
+    private final NewOfferAlertService newOfferAlertService;
 
     public PublicTenantInfoDTO getTenantInfo(String token) {
         Tenant tenant = findActiveTenant(token);
@@ -100,6 +102,8 @@ public class PublicOfferService {
                 .map(file -> toOfferImage(saved, file))
                 .toList();
         offerImageRepository.saveAll(offerImages);
+
+        newOfferAlertService.sendNewOfferAlert(tenant, saved);
     }
 
     private boolean hasLogo(TenantOfferSettings settings) {

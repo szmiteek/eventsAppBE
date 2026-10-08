@@ -49,6 +49,12 @@ services:
       GOOGLE_OAUTH_REDIRECT_URI: "https://${DOMAIN}/api/integrations/google/callback"
       GOOGLE_OAUTH_FRONTEND_REDIRECT_URI: "https://${DOMAIN}/settings"
       APP_STORAGE_OFFER_PDF_DIR: /app/storage/offer-pdfs
+      # Skrzynka aplikacji do alertow o nowych zapytaniach. Puste = alerty wylaczone.
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-587}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
+      APP_MAIL_ALERT_FROM: ${APP_MAIL_ALERT_FROM:-}
       # Bez profilu dev - CORS wylaczony, bo frontend i API stoja za jednym proxy.
     volumes:
       - pdf_data:/app/storage

@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -55,16 +57,30 @@ public class AuthService {
     }
 
     public TenantEmailSettingsDTO getEmailSettings() {
-        return TenantEmailSettingsDTO.builder()
-                .emailMessage(currentTenant().getEmailMessage())
-                .build();
+        return toEmailSettings(currentTenant());
     }
 
     public TenantEmailSettingsDTO updateEmailSettings(TenantEmailSettingsUpdateCommand command) {
         Tenant tenant = currentTenant();
-        tenant.setEmailMessage(command.getEmailMessage());
+        Optional.ofNullable(command.getEmailMessage()).ifPresent(tenant::setEmailMessage);
+        Optional.ofNullable(command.getAlertEmailEnabled()).ifPresent(tenant::setAlertEmailEnabled);
+        // Pusty adres cofa pole do adresu konta, zamiast zostawiać alerty bez odbiorcy.
+        Optional.ofNullable(command.getAlertEmail())
+                .ifPresent(email -> tenant.setAlertEmail(email.isBlank() ? null : email.trim()));
+
+        if (tenant.isAlertEmailEnabled() && tenant.resolveAlertEmail() == null) {
+            throw new EventApiException("Podaj adres e-mail do alertów.", HttpStatus.BAD_REQUEST);
+        }
         tenantRepository.save(tenant);
-        return getEmailSettings();
+        return toEmailSettings(tenant);
+    }
+
+    private TenantEmailSettingsDTO toEmailSettings(Tenant tenant) {
+        return TenantEmailSettingsDTO.builder()
+                .emailMessage(tenant.getEmailMessage())
+                .alertEmail(tenant.resolveAlertEmail())
+                .alertEmailEnabled(tenant.isAlertEmailEnabled())
+                .build();
     }
 
     private Tenant currentTenant() {

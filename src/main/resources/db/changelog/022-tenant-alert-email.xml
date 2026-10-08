@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Alerty o nowym zapytaniu z formularza klienta.
+        alert_email zostaje nullowalne: NULL znaczy "uzyj adresu konta", wiec zmiana adresu logowania
+        pociaga za soba adres alertow, dopoki tenant nie wpisze wlasnego.
+    -->
+    <changeSet id="0" author="adrian">
+        <addColumn tableName="tenant">
+            <column name="alert_email" type="VARCHAR(255)"/>
+            <column name="alert_email_enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

@@ -47,7 +47,7 @@ public class AuthController {
     }
 
     @PatchMapping("/email-settings")
-    public ResponseEntity<TenantEmailSettingsDTO> updateEmailSettings(@RequestBody TenantEmailSettingsUpdateCommand command) {
+    public ResponseEntity<TenantEmailSettingsDTO> updateEmailSettings(@Valid @RequestBody TenantEmailSettingsUpdateCommand command) {
         return ResponseEntity.ok(authService.updateEmailSettings(command));
     }
 }
