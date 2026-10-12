@@ -463,7 +463,8 @@ public class OfferPdfRenderer {
 
             // Baseline offset by half the font's cap height, so the title sits centred on the logo whatever the font.
             float titleBaseline = centerY - TITLE_SIZE * capHeight(titleFont) / 2;
-            drawText(cs, titleFont, fitLine(titleFont, title, TITLE_SIZE, width - 2 * MARGIN - logoSpace),
+            // Tytuły są wersalikami; toUpperCase(POLISH), żeby „ó”, „ł” i „ę” dostały właściwe wielkie litery.
+            drawText(cs, titleFont, fitLine(titleFont, title.toUpperCase(POLISH), TITLE_SIZE, width - 2 * MARGIN - logoSpace),
                     MARGIN, titleBaseline, TITLE_SIZE, text);
             drawLine(cs, MARGIN, headerBottom, width - MARGIN, headerBottom, divider, 0.75f);
 
