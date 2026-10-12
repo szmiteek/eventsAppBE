@@ -66,7 +66,10 @@ public class OfferPdfRenderer {
     private static final float MARGIN = 40f;
     private static final float HEADER_HEIGHT = 56f;
     private static final float HEADER_GAP = 24f;
-    private static final float LOGO_MAX_WIDTH = 150f;
+    /** Logo jest teraz wyższe (sięga do krawędzi strony), więc i szersze; limit chroni tytuł przed bardzo szerokim logo. */
+    private static final float LOGO_MAX_WIDTH = 260f;
+    /** Odstęp między dolną krawędzią logo a linią pod tytułem. */
+    private static final float LOGO_LINE_GAP = 4f;
 
     /**
      * Strony z własnego PDF-a tenanta mają 1440×810 pt i właśnie w tym formacie ogląda się ofertę. Układ
@@ -474,10 +477,14 @@ public class OfferPdfRenderer {
 
             float logoSpace = 0;
             if (logo != null) {
-                float scale = Math.min(LOGO_MAX_WIDTH / logo.getWidth(), HEADER_HEIGHT / logo.getHeight());
-                float logoWidth = logo.getWidth() * scale;
-                float logoHeight = logo.getHeight() * scale;
-                cs.drawImage(logo, width - MARGIN - logoWidth, centerY - logoHeight / 2, logoWidth, logoHeight);
+                // Logo stoi tuż nad linią pod tytułem i sięga do samej górnej krawędzi strony, z zachowaniem proporcji.
+                // Bardzo szerokie logo ogranicza LOGO_MAX_WIDTH — wtedy jest niższe i do krawędzi nie dochodzi.
+                float logoBottom = headerBottom + LOGO_LINE_GAP;
+                float logoScale = Math.min((layoutSize.getHeight() - logoBottom) / logo.getHeight(),
+                        LOGO_MAX_WIDTH / logo.getWidth());
+                float logoWidth = logo.getWidth() * logoScale;
+                float logoHeight = logo.getHeight() * logoScale;
+                cs.drawImage(logo, width - MARGIN - logoWidth, logoBottom, logoWidth, logoHeight);
                 logoSpace = logoWidth + 24f;
             }
 
