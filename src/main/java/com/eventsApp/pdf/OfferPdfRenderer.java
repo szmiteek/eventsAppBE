@@ -2,6 +2,7 @@ package com.eventsApp.pdf;
 
 import com.eventsApp.eventElement.model.EventElement;
 import com.eventsApp.offerSettings.model.PdfOrientation;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -9,6 +10,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
@@ -40,11 +42,20 @@ import java.util.Map;
  * the title on the left and the tenant's logo on the right, on the tenant's background colour.
  */
 @Component
+@Slf4j
 public class OfferPdfRenderer {
 
     public static final int MAX_IMAGES = 4;
 
-    private static final String FONT_PATH = "/fonts/Inter.ttf";
+    /** Tytuł strony: Playfair Display (SIL OFL). */
+    private static final String TITLE_FONT_PATH = "/fonts/PlayfairDisplay.ttf";
+    /**
+     * Cały pozostały tekst: Arimo (SIL OFL), darmowy odpowiednik Arial o identycznych metrykach. Arial MT Pro
+     * jest komercyjny, a repozytorium publiczne, więc jego pliku tu nie wolno dodawać. Brakujący plik nie
+     * wyłącza generowania PDF-ów: renderer zapisuje ostrzeżenie w logu i używa Intera.
+     */
+    private static final String BODY_FONT_PATH = "/fonts/Arimo.ttf";
+    private static final String FALLBACK_FONT_PATH = "/fonts/Inter.ttf";
     private static final String INFO_TITLE = "Informacje ogólne";
     private static final String PRICING_TITLE = "Wycena";
     private static final String PRICING_CONTINUED_TITLE = "Wycena (cd.)";
@@ -53,35 +64,38 @@ public class OfferPdfRenderer {
     private static final float MARGIN = 40f;
     private static final float HEADER_HEIGHT = 56f;
     private static final float HEADER_GAP = 24f;
-    private static final float TITLE_SIZE = 24f;
     private static final float LOGO_MAX_WIDTH = 150f;
 
-    private static final float LABEL_SIZE = 10f;
+    /**
+     * Strony z własnego PDF-a tenanta mają 1440×810 pt i właśnie w tym formacie ogląda się ofertę. Układ
+     * liczymy w jednostkach A4, a na taką stronę skaluje go ten współczynnik (ogranicza go wysokość strony).
+     */
+    private static final float REFERENCE_SCALE = 810f / PDRectangle.A4.getWidth();
+    /** Rozmiary czcionek podajemy tak, jak wyglądają na stronie 1440×810; na A4 skalują się proporcjonalnie. */
+    private static final float TITLE_SIZE = onReferencePage(37f);
+    private static final float TEXT_SIZE = onReferencePage(18f);
+    private static final float LINE_HEIGHT = TEXT_SIZE * 1.35f;
     private static final float LABEL_GAP = 8f;
-    private static final float VALUE_SIZE = 15f;
-    private static final float VALUE_LINE_HEIGHT = 20f;
     /** Maksymalna wysokość rzędu zdjęć — bez limitu brały całą resztę strony i dominowały nad danymi. */
     private static final float IMAGE_ROW_MAX_HEIGHT = 230f;
     private static final int VALUE_MAX_LINES = 3;
+    /** Od tej szerokości treści (jednostki układu) etykiety mieszczą się w czterech kolumnach. */
+    private static final float WIDE_PAGE_CONTENT_WIDTH = 900f;
     private static final float CELL_GAP_X = 24f;
     private static final float CELL_GAP_Y = 20f;
     private static final float IMAGE_GAP = 16f;
     private static final int MAX_PHOTO_SIDE_PX = 1600;
     private static final int MAX_LOGO_SIDE_PX = 1000;
 
-    private static final float TABLE_TEXT_SIZE = 10.5f;
-    private static final float TABLE_LINE_HEIGHT = 14f;
     private static final float TABLE_ROW_PADDING = 8f;
-    private static final float TABLE_HEADER_HEIGHT = 20f;
-    private static final float TABLE_TOTAL_HEIGHT = 34f;
-    private static final float COL_QTY = 50f;
-    private static final float COL_UNIT_PRICE = 85f;
-    private static final float COL_SUM = 90f;
+    private static final float TABLE_HEADER_HEIGHT = 24f;
+    private static final float TABLE_TOTAL_HEIGHT = 38f;
+    private static final float COL_QTY = 56f;
+    private static final float COL_UNIT_PRICE = 115f;
+    private static final float COL_SUM = 100f;
     private static final float COL_GAP = 10f;
     private static final float COLUMN_GAP = 32f;
     private static final float LANDSCAPE_TABLE_SHARE = 0.58f;
-    private static final float DESC_TEXT_SIZE = 11f;
-    private static final float DESC_LINE_HEIGHT = 16f;
 
     public record Field(String label, String value) {
     }
@@ -153,7 +167,9 @@ public class OfferPdfRenderer {
 
         private final PDDocument document;
         private final Content content;
+        /** Cały tekst poza tytułem. */
         private final PDFont font;
+        private final PDFont titleFont;
         private final PDRectangle pageSize;
         /** Page in layout units: the sizes below are A4-based and scaled onto the real page. */
         private final PDRectangle layoutSize;
@@ -171,7 +187,8 @@ public class OfferPdfRenderer {
         Layout(PDDocument document, Content content, PDRectangle pageSize) throws IOException {
             this.document = document;
             this.content = content;
-            this.font = loadFont(document);
+            this.font = loadFont(document, BODY_FONT_PATH);
+            this.titleFont = loadFont(document, TITLE_FONT_PATH);
             // An imposed size (the tenant's own PDF) wins over the orientation setting, and its own
             // proportions decide the layout — a 16:9 page is laid out like a landscape one.
             this.pageSize = pageSize != null
@@ -200,7 +217,8 @@ public class OfferPdfRenderer {
         void drawInfoPage() throws IOException {
             PageArea page = newPage(INFO_TITLE);
             float contentWidth = contentWidth();
-            int columns = portrait ? 2 : 4;
+            // Przy 18 pt etykiety typu „TYP STOŁU PREZYDIALNEGO” nie mieszczą się w czterech kolumnach na wąskiej stronie A4.
+            int columns = portrait ? 2 : contentWidth >= WIDE_PAGE_CONTENT_WIDTH ? 4 : 3;
             float cellWidth = (contentWidth - CELL_GAP_X * (columns - 1)) / columns;
 
             List<Field> fields = content.fields() != null ? content.fields() : List.of();
@@ -210,7 +228,7 @@ public class OfferPdfRenderer {
             for (Field field : fields) {
                 valueLines = Math.max(valueLines, valueLines(field, cellWidth).size());
             }
-            float cellHeight = LABEL_SIZE + LABEL_GAP + valueLines * VALUE_LINE_HEIGHT;
+            float cellHeight = TEXT_SIZE + LABEL_GAP + valueLines * LINE_HEIGHT;
             for (int i = 0; i < fields.size(); i++) {
                 float x = MARGIN + (i % columns) * (cellWidth + CELL_GAP_X);
                 float top = page.contentTop() - (i / columns) * (cellHeight + CELL_GAP_Y);
@@ -224,19 +242,19 @@ public class OfferPdfRenderer {
 
         private void drawField(PDPageContentStream cs, Field field, float x, float top, float width) throws IOException {
             String label = sanitizeLine(field.label()).toUpperCase(POLISH);
-            drawText(cs, fitLine(label, LABEL_SIZE, width), x, top - LABEL_SIZE, LABEL_SIZE, muted);
+            drawText(cs, fitLine(label, TEXT_SIZE, width), x, top - TEXT_SIZE, TEXT_SIZE, muted);
 
             List<String> lines = valueLines(field, width);
-            float baseline = top - LABEL_SIZE - LABEL_GAP - VALUE_SIZE;
+            float baseline = top - TEXT_SIZE - LABEL_GAP - TEXT_SIZE;
             for (String line : lines) {
-                drawText(cs, line, x, baseline, VALUE_SIZE, text);
-                baseline -= VALUE_LINE_HEIGHT;
+                drawText(cs, line, x, baseline, TEXT_SIZE, text);
+                baseline -= LINE_HEIGHT;
             }
         }
 
         private List<String> valueLines(Field field, float width) throws IOException {
             String value = sanitizeLine(field.value() != null ? field.value().replaceAll("\\R", " ") : "").trim();
-            return wrap(value.isEmpty() ? "-" : value, VALUE_SIZE, width, VALUE_MAX_LINES);
+            return wrap(value.isEmpty() ? "-" : value, TEXT_SIZE, width, VALUE_MAX_LINES);
         }
 
         private void drawImages(PDPageContentStream cs, float top, float contentWidth) throws IOException {
@@ -257,14 +275,14 @@ public class OfferPdfRenderer {
 
             // Pasek zdjęć idzie zaraz pod danymi, a nadmiar wysokości zostaje pustym marginesem na dole strony.
             // Limit dotyczy rzędu, nie całego paska — inaczej w pionie dwa rzędy dzieliłyby się tą samą wysokością.
-            float available = top - LABEL_SIZE - 12f - MARGIN;
+            float available = top - TEXT_SIZE - 12f - MARGIN;
             float maxHeight = rows * IMAGE_ROW_MAX_HEIGHT + IMAGE_GAP * (rows - 1);
             float areaHeight = Math.min(available, maxHeight);
-            float areaTop = top - LABEL_SIZE - 12f;
+            float areaTop = top - TEXT_SIZE - 12f;
             if (images.isEmpty() || areaHeight < 60f) {
                 return;
             }
-            drawText(cs, "NADESŁANE INSPIRACJE", MARGIN, top - LABEL_SIZE, LABEL_SIZE, muted);
+            drawText(cs, "NADESŁANE INSPIRACJE", MARGIN, top - TEXT_SIZE, TEXT_SIZE, muted);
 
             float boxWidth = (contentWidth - IMAGE_GAP * (columns - 1)) / columns;
             float boxHeight = (areaHeight - IMAGE_GAP * (rows - 1)) / rows;
@@ -317,16 +335,16 @@ public class OfferPdfRenderer {
             BigDecimal total = BigDecimal.ZERO;
 
             if (elements.isEmpty()) {
-                float rowHeight = TABLE_ROW_PADDING * 2 + TABLE_LINE_HEIGHT;
+                float rowHeight = TABLE_ROW_PADDING * 2 + LINE_HEIGHT;
                 drawText(pricingPage(cursor.page).cs(), "Brak wycenionych elementów",
-                        x, cursor.y - TABLE_ROW_PADDING - TABLE_TEXT_SIZE, TABLE_TEXT_SIZE, muted);
+                        x, cursor.y - TABLE_ROW_PADDING - TEXT_SIZE, TEXT_SIZE, muted);
                 cursor.y -= rowHeight;
             }
 
             for (EventElement element : elements) {
                 String name = sanitizeLine(element.getName()).trim();
-                List<String> nameLines = wrap(name.isEmpty() ? "-" : name, TABLE_TEXT_SIZE, nameWidth, Integer.MAX_VALUE);
-                float rowHeight = TABLE_ROW_PADDING * 2 + nameLines.size() * TABLE_LINE_HEIGHT;
+                List<String> nameLines = wrap(name.isEmpty() ? "-" : name, TEXT_SIZE, nameWidth, Integer.MAX_VALUE);
+                float rowHeight = TABLE_ROW_PADDING * 2 + nameLines.size() * LINE_HEIGHT;
                 if (cursor.needsNewPage(rowHeight)) {
                     cursor.nextPage();
                     drawTableHeader(cursor, x, width, qtyRight, unitRight, sumRight);
@@ -334,13 +352,13 @@ public class OfferPdfRenderer {
 
                 PDPageContentStream cs = pricingPage(cursor.page).cs();
                 BigDecimal sum = element.getUnitPrice().multiply(BigDecimal.valueOf(element.getQuantity()));
-                float baseline = cursor.y - TABLE_ROW_PADDING - TABLE_TEXT_SIZE;
+                float baseline = cursor.y - TABLE_ROW_PADDING - TEXT_SIZE;
                 for (int i = 0; i < nameLines.size(); i++) {
-                    drawText(cs, nameLines.get(i), x, baseline - i * TABLE_LINE_HEIGHT, TABLE_TEXT_SIZE, text);
+                    drawText(cs, nameLines.get(i), x, baseline - i * LINE_HEIGHT, TEXT_SIZE, text);
                 }
-                drawTextRight(cs, String.valueOf(element.getQuantity()), qtyRight, baseline, TABLE_TEXT_SIZE, text);
-                drawTextRight(cs, formatMoney(element.getUnitPrice()), unitRight, baseline, TABLE_TEXT_SIZE, text);
-                drawTextRight(cs, formatMoney(sum), sumRight, baseline, TABLE_TEXT_SIZE, text);
+                drawTextRight(cs, String.valueOf(element.getQuantity()), qtyRight, baseline, TEXT_SIZE, text);
+                drawTextRight(cs, formatMoney(element.getUnitPrice()), unitRight, baseline, TEXT_SIZE, text);
+                drawTextRight(cs, formatMoney(sum), sumRight, baseline, TEXT_SIZE, text);
 
                 cursor.y -= rowHeight;
                 drawLine(cs, x, cursor.y, sumRight, cursor.y, divider, 0.5f);
@@ -351,38 +369,38 @@ public class OfferPdfRenderer {
                 cursor.nextPage();
             }
             PDPageContentStream cs = pricingPage(cursor.page).cs();
-            float baseline = cursor.y - 22f;
-            drawTextRight(cs, "Razem", unitRight, baseline, 11f, muted);
-            drawTextRight(cs, formatMoney(total), sumRight, baseline, 12f, text);
+            float baseline = cursor.y - 24f;
+            drawTextRight(cs, "Razem", unitRight, baseline, TEXT_SIZE, muted);
+            drawTextRight(cs, formatMoney(total), sumRight, baseline, TEXT_SIZE, text);
             cursor.y -= TABLE_TOTAL_HEIGHT;
         }
 
         private void drawTableHeader(Cursor cursor, float x, float width,
                                      float qtyRight, float unitRight, float sumRight) throws IOException {
             PDPageContentStream cs = pricingPage(cursor.page).cs();
-            float baseline = cursor.y - LABEL_SIZE;
-            drawText(cs, "NAZWA", x, baseline, LABEL_SIZE, muted);
-            drawTextRight(cs, "ILOŚĆ", qtyRight, baseline, LABEL_SIZE, muted);
-            drawTextRight(cs, "CENA ZA SZT.", unitRight, baseline, LABEL_SIZE, muted);
-            drawTextRight(cs, "SUMA", sumRight, baseline, LABEL_SIZE, muted);
+            float baseline = cursor.y - TEXT_SIZE;
+            drawText(cs, "NAZWA", x, baseline, TEXT_SIZE, muted);
+            drawTextRight(cs, "ILOŚĆ", qtyRight, baseline, TEXT_SIZE, muted);
+            drawTextRight(cs, "CENA ZA SZT.", unitRight, baseline, TEXT_SIZE, muted);
+            drawTextRight(cs, "SUMA", sumRight, baseline, TEXT_SIZE, muted);
             cursor.y -= TABLE_HEADER_HEIGHT;
             drawLine(cs, x, cursor.y, x + width, cursor.y, divider, 0.75f);
         }
 
         private void drawDescription(Cursor cursor, float x, float width, String description) throws IOException {
-            if (cursor.needsNewPage(LABEL_SIZE + 12f + DESC_LINE_HEIGHT)) {
+            if (cursor.needsNewPage(TEXT_SIZE + 12f + LINE_HEIGHT)) {
                 cursor.nextPage();
             }
-            drawText(pricingPage(cursor.page).cs(), "OPIS DEKORACJI", x, cursor.y - LABEL_SIZE, LABEL_SIZE, muted);
-            cursor.y -= LABEL_SIZE + 12f;
+            drawText(pricingPage(cursor.page).cs(), "OPIS DEKORACJI", x, cursor.y - TEXT_SIZE, TEXT_SIZE, muted);
+            cursor.y -= TEXT_SIZE + 12f;
 
             for (String paragraph : description.split("\\R", -1)) {
-                for (String line : wrap(sanitizeLine(paragraph), DESC_TEXT_SIZE, width, Integer.MAX_VALUE)) {
-                    if (cursor.needsNewPage(DESC_LINE_HEIGHT)) {
+                for (String line : wrap(sanitizeLine(paragraph), TEXT_SIZE, width, Integer.MAX_VALUE)) {
+                    if (cursor.needsNewPage(LINE_HEIGHT)) {
                         cursor.nextPage();
                     }
-                    drawText(pricingPage(cursor.page).cs(), line, x, cursor.y - DESC_TEXT_SIZE, DESC_TEXT_SIZE, text);
-                    cursor.y -= DESC_LINE_HEIGHT;
+                    drawText(pricingPage(cursor.page).cs(), line, x, cursor.y - TEXT_SIZE, TEXT_SIZE, text);
+                    cursor.y -= LINE_HEIGHT;
                 }
             }
         }
@@ -443,9 +461,10 @@ public class OfferPdfRenderer {
                 logoSpace = logoWidth + 24f;
             }
 
-            // Cap height of Inter is ~0.73 em — offset the baseline so the title sits centred on the logo.
-            float titleBaseline = centerY - TITLE_SIZE * 0.365f;
-            drawText(cs, fitLine(title, TITLE_SIZE, width - 2 * MARGIN - logoSpace), MARGIN, titleBaseline, TITLE_SIZE, text);
+            // Baseline offset by half the font's cap height, so the title sits centred on the logo whatever the font.
+            float titleBaseline = centerY - TITLE_SIZE * capHeight(titleFont) / 2;
+            drawText(cs, titleFont, fitLine(titleFont, title, TITLE_SIZE, width - 2 * MARGIN - logoSpace),
+                    MARGIN, titleBaseline, TITLE_SIZE, text);
             drawLine(cs, MARGIN, headerBottom, width - MARGIN, headerBottom, divider, 0.75f);
 
             return new PageArea(cs, headerBottom - HEADER_GAP);
@@ -472,11 +491,15 @@ public class OfferPdfRenderer {
         // ---- drawing primitives ----
 
         private void drawText(PDPageContentStream cs, String value, float x, float y, float size, Color color) throws IOException {
+            drawText(cs, font, value, x, y, size, color);
+        }
+
+        private void drawText(PDPageContentStream cs, PDFont textFont, String value, float x, float y, float size, Color color) throws IOException {
             if (value.isEmpty()) {
                 return;
             }
             cs.beginText();
-            cs.setFont(font, size);
+            cs.setFont(textFont, size);
             cs.setNonStrokingColor(color);
             cs.newLineAtOffset(x, y);
             cs.showText(value);
@@ -496,7 +519,11 @@ public class OfferPdfRenderer {
         }
 
         private float textWidth(String value, float size) throws IOException {
-            return font.getStringWidth(value) / 1000f * size;
+            return textWidth(font, value, size);
+        }
+
+        private float textWidth(PDFont textFont, String value, float size) throws IOException {
+            return textFont.getStringWidth(value) / 1000f * size;
         }
 
         // ---- text handling ----
@@ -530,14 +557,18 @@ public class OfferPdfRenderer {
 
         /** Word-wraps to maxWidth, breaking words longer than a line; beyond maxLines the last line ends with an ellipsis. */
         private List<String> wrap(String value, float size, float maxWidth, int maxLines) throws IOException {
+            return wrap(font, value, size, maxWidth, maxLines);
+        }
+
+        private List<String> wrap(PDFont textFont, String value, float size, float maxWidth, int maxLines) throws IOException {
             List<String> lines = new ArrayList<>();
             StringBuilder line = new StringBuilder();
             for (String word : value.split(" ")) {
                 if (word.isEmpty()) {
                     continue;
                 }
-                while (textWidth(word, size) > maxWidth) {
-                    int cut = fittingPrefixLength(word, size, maxWidth);
+                while (textWidth(textFont, word, size) > maxWidth) {
+                    int cut = fittingPrefixLength(textFont, word, size, maxWidth);
                     if (!line.isEmpty()) {
                         lines.add(line.toString());
                         line.setLength(0);
@@ -549,7 +580,7 @@ public class OfferPdfRenderer {
                     continue;
                 }
                 String candidate = line.isEmpty() ? word : line + " " + word;
-                if (textWidth(candidate, size) <= maxWidth) {
+                if (textWidth(textFont, candidate, size) <= maxWidth) {
                     line.setLength(0);
                     line.append(candidate);
                 } else {
@@ -566,19 +597,23 @@ public class OfferPdfRenderer {
                 return lines;
             }
             List<String> truncated = new ArrayList<>(lines.subList(0, maxLines));
-            truncated.set(maxLines - 1, ellipsize(truncated.get(maxLines - 1), size, maxWidth));
+            truncated.set(maxLines - 1, ellipsize(textFont, truncated.get(maxLines - 1), size, maxWidth));
             return truncated;
         }
 
         private String fitLine(String value, float size, float maxWidth) throws IOException {
-            return wrap(value, size, maxWidth, 1).get(0);
+            return fitLine(font, value, size, maxWidth);
         }
 
-        private int fittingPrefixLength(String word, float size, float maxWidth) throws IOException {
+        private String fitLine(PDFont textFont, String value, float size, float maxWidth) throws IOException {
+            return wrap(textFont, value, size, maxWidth, 1).get(0);
+        }
+
+        private int fittingPrefixLength(PDFont textFont, String word, float size, float maxWidth) throws IOException {
             int end = word.offsetByCodePoints(0, 1);
             while (end < word.length()) {
                 int next = word.offsetByCodePoints(end, 1);
-                if (textWidth(word.substring(0, next), size) > maxWidth) {
+                if (textWidth(textFont, word.substring(0, next), size) > maxWidth) {
                     break;
                 }
                 end = next;
@@ -586,10 +621,10 @@ public class OfferPdfRenderer {
             return end;
         }
 
-        private String ellipsize(String line, float size, float maxWidth) throws IOException {
+        private String ellipsize(PDFont textFont, String line, float size, float maxWidth) throws IOException {
             String ellipsis = canEncode('…') ? "…" : "...";
             String result = line.stripTrailing();
-            while (!result.isEmpty() && textWidth(result + ellipsis, size) > maxWidth) {
+            while (!result.isEmpty() && textWidth(textFont, result + ellipsis, size) > maxWidth) {
                 result = result.substring(0, result.offsetByCodePoints(result.length(), -1)).stripTrailing();
             }
             return result + ellipsis;
@@ -619,13 +654,31 @@ public class OfferPdfRenderer {
     private record PageArea(PDPageContentStream cs, float contentTop) {
     }
 
-    private static PDFont loadFont(PDDocument document) throws IOException {
-        try (InputStream fontStream = OfferPdfRenderer.class.getResourceAsStream(FONT_PATH)) {
-            if (fontStream == null) {
-                throw new IllegalStateException("Font not found on classpath: " + FONT_PATH);
+    /** A missing font file must not take PDF generation down — warn and use the bundled Inter instead. */
+    private static PDFont loadFont(PDDocument document, String path) throws IOException {
+        try (InputStream fontStream = OfferPdfRenderer.class.getResourceAsStream(path)) {
+            if (fontStream != null) {
+                return PDType0Font.load(document, fontStream, true);
             }
-            return PDType0Font.load(document, fontStream, true);
         }
+        log.warn("Brak czcionki {} na classpath — używam {}.", path, FALLBACK_FONT_PATH);
+        try (InputStream fallback = OfferPdfRenderer.class.getResourceAsStream(FALLBACK_FONT_PATH)) {
+            if (fallback == null) {
+                throw new IllegalStateException("Font not found on classpath: " + FALLBACK_FONT_PATH);
+            }
+            return PDType0Font.load(document, fallback, true);
+        }
+    }
+
+    /** Cap height in em, read from the font itself; 0.7 when the file doesn't say. */
+    private static float capHeight(PDFont font) {
+        PDFontDescriptor descriptor = font.getFontDescriptor();
+        float height = descriptor != null ? descriptor.getCapHeight() / 1000f : 0f;
+        return height > 0 ? height : 0.7f;
+    }
+
+    private static float onReferencePage(float points) {
+        return points / REFERENCE_SCALE;
     }
 
     /** Redraws into a plain RGB/ARGB image — JPEGFactory can't take indexed images — scaled down to maxSidePx. */

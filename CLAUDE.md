@@ -104,6 +104,13 @@ generowania PDF-a**. Pełna ścieżka dodania pola:
 - `OfferPdfService` / `OfferPdfRenderer` (PDFBox) generują strony oferty („Informacje ogólne”
   z pól wybranych w ustawieniach, wycena, zdjęcia) i doklejają je na końcu własnego PDF-a tenanta;
   rozmiar strony bierze się wtedy z pierwszej strony tego PDF-a.
+- **Czcionki:** tytuł strony to Playfair Display 37, cały pozostały tekst Arimo 18 (`resources/fonts`,
+  licencje OFL obok plików). Arimo to darmowy odpowiednik Arial o tych samych metrykach. **Nie dodawaj
+  Arial ani Arial MT Pro** — to czcionki komercyjne, a repozytoria są publiczne. Brak pliku czcionki nie
+  wyłącza generowania: renderer loguje ostrzeżenie i używa Intera.
+- **Rozmiary** podajemy tak, jak wyglądają na stronie 1440×810 pt (format PDF-ów tenantów, patrz
+  `onReferencePage()`). Układ liczy się w jednostkach A4 i skaluje na wybraną stronę, więc na A4 te same
+  rozmiary wychodzą proporcjonalnie mniejsze. Cały tekst poza tytułem ma jeden rozmiar (`TEXT_SIZE`).
 - Gotowe pliki lądują w `app.storage.offer-pdf-dir` (domyślnie `./storage/offer-pdfs`).
 - Podpisanej oferty (`SIGNED`) nie da się już edytować — modal PDF przechodzi w tryb tylko do odczytu.
 
