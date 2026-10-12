@@ -1,6 +1,7 @@
 package com.eventsApp.pdf;
 
 import com.eventsApp.eventElement.model.EventElement;
+import com.eventsApp.offerImage.OfferImageService;
 import com.eventsApp.offerSettings.model.PdfOrientation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
@@ -45,7 +46,8 @@ import java.util.Map;
 @Slf4j
 public class OfferPdfRenderer {
 
-    public static final int MAX_IMAGES = 4;
+    /** Tyle zdjęć, ile oferta może mieć — PDF nie pomija żadnego. */
+    public static final int MAX_IMAGES = OfferImageService.MAX_IMAGES_PER_OFFER;
 
     /** Tytuł strony: Playfair Display (SIL OFL). */
     private static final String TITLE_FONT_PATH = "/fonts/PlayfairDisplay.ttf";
@@ -83,7 +85,7 @@ public class OfferPdfRenderer {
     private static final float WIDE_PAGE_CONTENT_WIDTH = 900f;
     private static final float CELL_GAP_X = 24f;
     private static final float CELL_GAP_Y = 20f;
-    private static final float IMAGE_GAP = 16f;
+    private static final float IMAGE_GAP = 8f;
     private static final int MAX_PHOTO_SIDE_PX = 1600;
     private static final int MAX_LOGO_SIDE_PX = 1000;
 
@@ -269,32 +271,50 @@ public class OfferPdfRenderer {
                 }
             }
 
-            // Landscape: one row of four. Portrait: a 2×2 grid.
-            int columns = portrait ? 2 : MAX_IMAGES;
-            int rows = portrait ? 2 : 1;
+            if (images.isEmpty()) {
+                return;
+            }
+
+            // Zdjęcia idą rzędami o wspólnej wysokości i stałym odstępie. W równych polach, w których zdjęcie leży
+            // na środku, widoczny odstęp zależałby od proporcji każdego zdjęcia. Poziomo wszystkie są w jednym
+            // rzędzie, w pionie w dwóch.
+            int perRow = portrait ? (images.size() + 1) / 2 : images.size();
+            List<List<PDImageXObject>> rows = new ArrayList<>();
+            for (int from = 0; from < images.size(); from += perRow) {
+                rows.add(images.subList(from, Math.min(from + perRow, images.size())));
+            }
+
+            // Wysokość, przy której najciaśniejszy rząd wypełnia całą szerokość treści, nie wyższa niż limit.
+            float rowHeight = IMAGE_ROW_MAX_HEIGHT;
+            for (List<PDImageXObject> row : rows) {
+                float aspects = 0;
+                for (PDImageXObject image : row) {
+                    aspects += (float) image.getWidth() / image.getHeight();
+                }
+                rowHeight = Math.min(rowHeight, (contentWidth - IMAGE_GAP * (row.size() - 1)) / aspects);
+            }
 
             // Pasek zdjęć idzie zaraz pod danymi, a nadmiar wysokości zostaje pustym marginesem na dole strony.
-            // Limit dotyczy rzędu, nie całego paska — inaczej w pionie dwa rzędy dzieliłyby się tą samą wysokością.
-            float available = top - TEXT_SIZE - 12f - MARGIN;
-            float maxHeight = rows * IMAGE_ROW_MAX_HEIGHT + IMAGE_GAP * (rows - 1);
-            float areaHeight = Math.min(available, maxHeight);
             float areaTop = top - TEXT_SIZE - 12f;
-            if (images.isEmpty() || areaHeight < 60f) {
+            float available = areaTop - MARGIN;
+            if (available < 60f) {
                 return;
+            }
+            float gaps = IMAGE_GAP * (rows.size() - 1);
+            if (rows.size() * rowHeight + gaps > available) {
+                rowHeight = (available - gaps) / rows.size();
             }
             drawText(cs, "NADESŁANE INSPIRACJE", MARGIN, top - TEXT_SIZE, TEXT_SIZE, muted);
 
-            float boxWidth = (contentWidth - IMAGE_GAP * (columns - 1)) / columns;
-            float boxHeight = (areaHeight - IMAGE_GAP * (rows - 1)) / rows;
-
-            for (int i = 0; i < images.size(); i++) {
-                PDImageXObject image = images.get(i);
-                float boxX = MARGIN + (i % columns) * (boxWidth + IMAGE_GAP);
-                float boxTop = areaTop - (i / columns) * (boxHeight + IMAGE_GAP);
-                float scale = Math.min(boxWidth / image.getWidth(), boxHeight / image.getHeight());
-                float drawWidth = image.getWidth() * scale;
-                float drawHeight = image.getHeight() * scale;
-                cs.drawImage(image, boxX + (boxWidth - drawWidth) / 2, boxTop - drawHeight, drawWidth, drawHeight);
+            float y = areaTop;
+            for (List<PDImageXObject> row : rows) {
+                float x = MARGIN;
+                for (PDImageXObject image : row) {
+                    float width = rowHeight * image.getWidth() / image.getHeight();
+                    cs.drawImage(image, x, y - rowHeight, width, rowHeight);
+                    x += width + IMAGE_GAP;
+                }
+                y -= rowHeight + IMAGE_GAP;
             }
         }
 
