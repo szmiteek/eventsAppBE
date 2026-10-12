@@ -1,6 +1,7 @@
 package com.eventsApp.email;
 
 import com.eventsApp.auth.model.Tenant;
+import com.eventsApp.format.PolishNumberFormat;
 import com.eventsApp.integration.mail.SystemMailSender;
 import com.eventsApp.offer.model.Offer;
 import lombok.RequiredArgsConstructor;
@@ -51,8 +52,8 @@ public class NewOfferAlertService {
         append(body, "Telefon", offer.getPhone());
         append(body, "Miejsce", offer.getVenue());
         append(body, "Data eventu", offer.getEventDate() != null ? offer.getEventDate().format(DATE) : null);
-        append(body, "Liczba gości", offer.getGuests() != null ? String.valueOf(offer.getGuests()) : null);
-        append(body, "Orientacyjny budżet", offer.getBudget() != null ? offer.getBudget() + " zł" : null);
+        append(body, "Liczba gości", offer.getGuests() != null ? PolishNumberFormat.grouped(offer.getGuests()) : null);
+        append(body, "Orientacyjny budżet", offer.getBudget() != null ? PolishNumberFormat.wholeMoney(offer.getBudget()) : null);
         body.append("\nSzczegóły zapytania znajdziesz na liście ofert w aplikacji.");
         return body.toString();
     }

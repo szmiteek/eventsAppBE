@@ -1,6 +1,7 @@
 package com.eventsApp.pdf;
 
 import com.eventsApp.eventElement.model.EventElement;
+import com.eventsApp.format.PolishNumberFormat;
 import com.eventsApp.offerImage.OfferImageService;
 import com.eventsApp.offerSettings.model.PdfOrientation;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +30,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -764,10 +763,6 @@ public class OfferPdfRenderer {
     }
 
     private static String formatMoney(BigDecimal value) {
-        DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance(POLISH);
-        symbols.setGroupingSeparator(' ');
-        symbols.setDecimalSeparator(',');
-        DecimalFormat format = new DecimalFormat("#,##0.00", symbols);
-        return format.format(value != null ? value : BigDecimal.ZERO) + " zł";
+        return PolishNumberFormat.money(value);
     }
 }

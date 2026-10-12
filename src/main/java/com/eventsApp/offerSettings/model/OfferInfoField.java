@@ -1,5 +1,6 @@
 package com.eventsApp.offerSettings.model;
 
+import com.eventsApp.format.PolishNumberFormat;
 import com.eventsApp.offer.model.Offer;
 
 import java.time.LocalDate;
@@ -17,8 +18,8 @@ public enum OfferInfoField {
     PHONE("Telefon", Offer::getPhone),
     VENUE("Miejsce", Offer::getVenue),
     EVENT_DATE("Data eventu", offer -> formatDate(offer.getEventDate())),
-    BUDGET("Orientacyjny budżet", offer -> offer.getBudget() != null ? offer.getBudget() + " zł" : null),
-    GUESTS("Liczba gości", offer -> offer.getGuests() != null ? String.valueOf(offer.getGuests()) : null),
+    BUDGET("Orientacyjny budżet", offer -> offer.getBudget() != null ? PolishNumberFormat.wholeMoney(offer.getBudget()) : null),
+    GUESTS("Liczba gości", offer -> offer.getGuests() != null ? PolishNumberFormat.grouped(offer.getGuests()) : null),
     EVENT_TYPE("Rodzaj wydarzenia", offer -> join(offer.getEventType())),
     AFTER_WEDDING_PARTY("Poprawiny", offer -> offer.isAfterWeddingParty() ? "Tak" : "Nie"),
     DECORATION_TYPE("Rodzaj kompozycji", offer -> join(offer.getDecorationType())),
